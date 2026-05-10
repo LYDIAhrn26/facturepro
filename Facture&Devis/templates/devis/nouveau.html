@@ -1,0 +1,769 @@
+{% extends "base.html" %}
+{% block title %}Nouveau devis — FacturePro{% endblock %}
+{% block page_title %}Nouveau devis{% endblock %}
+
+{% block extra_css %}
+<style>
+  .devis-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 18px;
+    align-items: start;
+  }
+
+  /* Infos entreprise auto */
+  .company-box {
+    background: linear-gradient(135deg, var(--indigo-bg), var(--violet-bg));
+    border: 1px solid rgba(99,102,241,.2);
+    border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;
+  }
+  .company-box-title {
+    font-size: 9px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--indigo);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
+  }
+  .company-info-row {
+    display: flex; gap: 8px; font-size: 11px;
+    color: var(--gray2); margin-bottom: 3px;
+  }
+  .company-info-row strong { color: var(--dark); min-width: 65px; flex-shrink: 0; }
+
+  /* Lignes prestation */
+  .lines-header {
+    display: grid;
+    grid-template-columns: 3fr 1.2fr .6fr 1fr 1fr 34px;
+    gap: 6px; font-size: 9px; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--gray);
+    padding-bottom: 7px; border-bottom: 2px solid var(--indigo-bg);
+    margin-bottom: 6px;
+  }
+  .line-row {
+    display: grid;
+    grid-template-columns: 3fr 1.2fr .6fr 1fr 1fr 34px;
+    gap: 6px; align-items: center; margin-bottom: 7px;
+    animation: fadeIn .2s ease;
+  }
+  .line-inp {
+    background: #f8faff; border: 1.5px solid var(--bdr);
+    border-radius: 6px; padding: 6px 8px; font-size: 11px;
+    color: var(--dark); font-family: var(--fn); outline: none;
+    width: 100%; transition: border-color .2s;
+  }
+  .line-inp:focus { border-color: var(--indigo); background: #fff; }
+  .line-total {
+    font-size: 11px; font-weight: 600;
+    color: var(--indigo); font-family: var(--mono); text-align: right;
+  }
+
+  /* Aperçu PDF */
+  .preview-wrap {
+    background: #fff; border: 1px solid #dde1f0;
+    border-radius: 12px; overflow: hidden;
+    box-shadow: 0 4px 20px rgba(99,102,241,.1);
+    font-family: Arial, sans-serif;
+  }
+  .prev-header-bar {
+    background: linear-gradient(135deg, #1e1b4b, #4f46e5);
+    padding: 16px 20px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .prev-logo-zone {
+    width: 70px; height: 50px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.15); border-radius: 8px;
+    overflow: hidden;
+  }
+  .prev-logo-zone img { width: 100%; height: 100%; object-fit: contain; }
+  .prev-logo-zone i { font-size: 22px; color: #fff; }
+  .prev-title-zone { text-align: right; }
+  .prev-devis-title { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: .04em; }
+  .prev-devis-num   { font-size: 11px; color: rgba(255,255,255,.7); margin-top: 3px; font-family: monospace; }
+  .prev-devis-date  { font-size: 10px; color: rgba(255,255,255,.6); }
+
+  .prev-body { padding: 16px 20px; }
+
+  .prev-parties {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    margin-bottom: 14px;
+  }
+  .prev-party-box {
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 7px; padding: 10px 12px; font-size: 10px;
+  }
+  .prev-party-label {
+    font-size: 8px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .1em; color: #6366f1; margin-bottom: 6px;
+    padding-bottom: 4px; border-bottom: 1px solid #e2e8f0;
+  }
+  .prev-party-name { font-size: 11px; font-weight: 700; color: #1e1b4b; margin-bottom: 3px; }
+  .prev-party-info { font-size: 9px; color: #64748b; line-height: 1.6; }
+
+  /* Tableau lignes aperçu */
+  .prev-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 9px; }
+  .prev-table thead tr { background: #1e1b4b; }
+  .prev-table th { padding: 6px 8px; color: #fff; text-align: left; font-size: 8px; text-transform: uppercase; letter-spacing: .06em; }
+  .prev-table th:last-child { text-align: right; }
+  .prev-table td { padding: 5px 8px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+  .prev-table td:last-child { text-align: right; font-family: monospace; font-weight: 600; }
+  .prev-table tbody tr:nth-child(even) { background: #f8fafc; }
+
+  /* Totaux aperçu */
+  .prev-totals { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  .prev-totals-box {
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 7px; padding: 10px 14px; min-width: 200px;
+  }
+  .prev-tot-row { display: flex; justify-content: space-between; font-size: 10px; color: #64748b; margin-bottom: 4px; }
+  .prev-tot-row.final {
+    font-size: 13px; font-weight: 700; color: #1e1b4b;
+    border-top: 2px solid #6366f1; padding-top: 7px; margin-top: 4px;
+  }
+  .prev-tot-row.final span:last-child { color: #6366f1; }
+
+  /* Conditions */
+  .prev-conditions {
+    background: #f0f4ff; border-left: 3px solid #6366f1;
+    border-radius: 0 6px 6px 0; padding: 10px 12px;
+    font-size: 9px; color: #475569; line-height: 1.7; margin-bottom: 10px;
+  }
+  .prev-conditions strong { color: #1e1b4b; display: block; margin-bottom: 4px; }
+
+  /* Zone signature */
+  .prev-signature-box {
+    border: 1px dashed #cbd5e1; border-radius: 6px;
+    padding: 12px; min-height: 70px; background: #fafafa;
+  }
+  .prev-signature-label { font-size: 10px; font-weight: 700; color: #1e1b4b; margin-bottom: 6px; }
+  .prev-signature-mention { font-size: 9px; color: #94a3b8; }
+  .prev-signature-accord  { font-size: 9px; color: #6366f1; margin-top: 20px; }
+
+  /* Footer aperçu */
+  .prev-footer {
+    background: #f8fafc; border-top: 1px solid #e2e8f0;
+    padding: 8px 20px; text-align: center;
+    font-size: 8px; color: #94a3b8; line-height: 1.6;
+  }
+
+  /* Bandes de confirmation */
+  .confirm-strip {
+    display: none; align-items: center; gap: 9px;
+    padding: 10px 14px; border-radius: 9px;
+    font-size: 12px; margin-bottom: 12px; animation: popIn .2s ease;
+  }
+  .strip-save { background: var(--green-bg); border: 1px solid rgba(16,185,129,.25); color: var(--green-txt); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Nouveau devis</h1>
+    <div class="page-subtitle" style="display:flex;align-items:center;gap:8px;">
+      <span style="font-family:var(--mono);">Réf. :</span>
+      <span class="ref-tag">{{ prochain_numero }}</span>
+    </div>
+  </div>
+  <div class="page-header-right">
+    <a href="{{ url_for('liste_devis') }}" class="btn btn-outline">
+      <i class="ti ti-arrow-left"></i> Mes devis
+    </a>
+    <button type="submit" form="devisForm" class="btn btn-primary">
+      <i class="ti ti-device-floppy"></i> Enregistrer le devis
+    </button>
+  </div>
+</div>
+
+<div id="stripSave" class="confirm-strip strip-save">
+  <i class="ti ti-check" style="font-size:16px;"></i>
+  Devis enregistré avec succès !
+</div>
+
+<!-- ══ FORMULAIRE ════════════════════════════════════════════════════════ -->
+<form method="POST" action="{{ url_for('nouveau_devis') }}" id="devisForm">
+
+<div class="devis-layout">
+
+  <!-- ── Colonne gauche : formulaire ── -->
+  <div>
+
+    <!-- Infos entreprise auto -->
+    <div class="company-box">
+      <div class="company-box-title">
+        <i class="ti ti-building-store"></i>
+        Votre entreprise — rempli automatiquement depuis votre profil
+      </div>
+      <div class="company-info-row"><strong>Nom</strong>{{ entreprise.nom or '—' }}</div>
+      <div class="company-info-row"><strong>SIRET</strong>{{ entreprise.siret or '—' }}</div>
+      <div class="company-info-row"><strong>Adresse</strong>{{ entreprise.adresse or '—' }}</div>
+      <div class="company-info-row"><strong>Email</strong>{{ entreprise.email or '—' }}</div>
+      <div class="company-info-row"><strong>Tél.</strong>{{ entreprise.telephone or '—' }}</div>
+      <div class="company-info-row"><strong>Gérant</strong>{{ entreprise.dirigeant or '—' }}</div>
+    </div>
+
+    <!-- Client -->
+    <div class="form-panel">
+      <div class="form-section-title"><i class="ti ti-user"></i> Informations client</div>
+
+      <!-- Données clients pour autocomplétion -->
+      <script>
+        var clientsDB = [
+          {% for c in clients %}
+          {
+            nom: {{ c.nom|tojson }},
+            prenom: {{ c.prenom|tojson }},
+            email: {{ c.email|tojson }},
+            telephone: {{ c.telephone|tojson }},
+            adresse: {{ c.adresse|tojson }},
+          },
+          {% endfor %}
+        ];
+      </script>
+
+      <div class="form-grid">
+        <div class="form-group col-span-2" style="position:relative;">
+          <label class="form-label">
+            Nom / Société *
+            <span style="font-size:10px;color:var(--indigo);font-weight:400;">
+              <i class="ti ti-bulb"></i> Tapez pour rechercher un client existant
+            </span>
+          </label>
+          <input class="form-control" type="text" name="client_nom"
+                 id="cNom" placeholder="Dupont ou nom de société" required
+                 autocomplete="off"
+                 oninput="searchClient(this.value); updatePreview();">
+          <div id="clientSuggestions" style="
+            display:none; position:absolute; top:100%; left:0; right:0;
+            background:#fff; border:1.5px solid var(--indigo);
+            border-radius:0 0 8px 8px; z-index:200;
+            max-height:200px; overflow-y:auto;
+            box-shadow:0 4px 16px rgba(99,102,241,.15);
+          "></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prénom</label>
+          <input class="form-control" type="text" name="client_prenom"
+                 id="cPre" placeholder="Marie" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-control" type="email" name="client_email"
+                 id="cMail" placeholder="client@email.fr" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Téléphone</label>
+          <input class="form-control" type="tel" name="client_tel"
+                 id="cTel" placeholder="06 00 00 00 00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Adresse</label>
+          <input class="form-control" type="text" name="client_adresse"
+                 id="cAdr" placeholder="12 rue Victor Hugo, 75001 Paris" oninput="updatePreview()">
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Adresse du chantier <span style="color:var(--gray);font-weight:400;">(si différente)</span></label>
+          <input class="form-control" type="text" name="adresse_presta"
+                 id="cChantier" placeholder="Même adresse que le client">
+        </div>
+      </div>
+    </div>
+
+    <!-- Prestation -->
+    <div class="form-panel">
+      <div class="form-section-title"><i class="ti ti-briefcase"></i> Prestation</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Type de prestation *</label>
+          <select class="form-control" name="type_service" id="typeService" required onchange="updatePreview()">
+            <option value="">-- Choisir --</option>
+            <optgroup label="🚛 Transport & Logistique">
+              <option>Déménagement</option>
+              <option>Transport de marchandises</option>
+              <option>Livraison express</option>
+              <option>Logistique & Stockage</option>
+              <option>Transport de personnes</option>
+            </optgroup>
+            <optgroup label="🔨 BTP & Artisanat">
+              <option>Maçonnerie & Gros œuvre</option>
+              <option>Plomberie & Sanitaire</option>
+              <option>Électricité</option>
+              <option>Menuiserie & Charpente</option>
+              <option>Peinture & Revêtements</option>
+              <option>Carrelage & Sol</option>
+              <option>Couverture & Toiture</option>
+              <option>Étanchéité</option>
+              <option>Isolation thermique</option>
+              <option>Chauffage & Climatisation</option>
+              <option>Serrurerie & Métallerie</option>
+              <option>Ravalement de façade</option>
+              <option>Démolition & Gros œuvre</option>
+            </optgroup>
+            <optgroup label="💻 Informatique & Tech">
+              <option>Développement web & mobile</option>
+              <option>Maintenance informatique</option>
+              <option>Réseaux & Infrastructures</option>
+              <option>Cybersécurité</option>
+              <option>Design graphique & UX</option>
+              <option>Référencement SEO</option>
+            </optgroup>
+            <optgroup label="🏥 Santé & Bien-être">
+              <option>Soins médicaux</option>
+              <option>Kinésithérapie</option>
+              <option>Coaching & Développement personnel</option>
+              <option>Coiffure & Esthétique</option>
+              <option>Sport & Fitness</option>
+            </optgroup>
+            <optgroup label="⚖️ Juridique & Conseil">
+              <option>Consulting & Conseil</option>
+              <option>Services juridiques</option>
+              <option>Comptabilité & Finance</option>
+              <option>Formation professionnelle</option>
+              <option>Ressources humaines</option>
+            </optgroup>
+            <optgroup label="🍽️ Restauration & Événementiel">
+              <option>Restauration & Traiteur</option>
+              <option>Organisation d'événements</option>
+              <option>Photographie & Vidéo</option>
+              <option>Animation & DJ</option>
+              <option>Location de matériel</option>
+            </optgroup>
+            <optgroup label="🏠 Immobilier & Services">
+              <option>Gestion immobilière</option>
+              <option>Nettoyage & Entretien</option>
+              <option>Jardinage & Paysage</option>
+              <option>Surveillance & Gardiennage</option>
+              <option>État des lieux</option>
+            </optgroup>
+            <optgroup label="📚 Éducation & Culture">
+              <option>Cours particuliers</option>
+              <option>Enseignement & Tutorat</option>
+              <option>Traduction & Rédaction</option>
+              <option>Production artistique</option>
+            </optgroup>
+            <optgroup label="🌍 Autre">
+              <option>Autre prestation</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date du devis *</label>
+          <input class="form-control" type="date" name="date_devis"
+                 id="dateDevis" required oninput="updatePreview()">
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Référence / Objet des travaux</label>
+          <input class="form-control" type="text" name="reference"
+                 id="reference" placeholder="Ex : TRAVAUX DE REFECTION DE L'ETANCHEITE..." oninput="updatePreview()">
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Description générale</label>
+          <textarea class="form-control" name="description" rows="2"
+                    placeholder="Description de la prestation..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lignes de prestation -->
+    <div class="form-panel">
+      <div class="form-section-title"><i class="ti ti-list"></i> Lignes de prestation</div>
+
+      <div class="lines-header">
+        <span>Description</span>
+        <span>Type / Unité</span>
+        <span style="text-align:center;">Qté</span>
+        <span style="text-align:right;">Prix HT</span>
+        <span style="text-align:right;">Total HT</span>
+        <span></span>
+      </div>
+
+      <div id="linesContainer"></div>
+
+      <!-- Champs cachés pour les lignes -->
+      <div id="hiddenLines"></div>
+
+      <button type="button" class="btn btn-ghost btn-sm" onclick="addLine()" style="margin-top:6px;">
+        <i class="ti ti-plus"></i> Ajouter une ligne
+      </button>
+
+      <!-- Totaux -->
+      <div class="total-box" style="margin-top:14px;">
+        <div class="total-row">
+          <span>Sous-total HT</span>
+          <span id="outHT" style="font-family:var(--mono);">0,00 €</span>
+        </div>
+        <div class="total-row">
+          <span style="display:flex;align-items:center;gap:8px;">
+            TVA
+            <input type="number" name="tva" id="tvaInput" value="20"
+                   min="0" max="100" step="0.5"
+                   style="width:62px;background:transparent;border:1.5px solid rgba(99,102,241,.3);border-radius:5px;padding:3px 6px;font-size:11px;color:var(--dark);font-family:var(--fn);text-align:center;"
+                   oninput="calcTotals()">
+            <span style="font-size:11px;color:var(--gray);">%</span>
+          </span>
+          <span id="outTVA" style="font-family:var(--mono);">0,00 €</span>
+        </div>
+        <div class="total-row total-final">
+          <span>Total TTC</span>
+          <span id="outTTC">0,00 €</span>
+        </div>
+      </div>
+
+      <!-- Champs cachés montants -->
+      <input type="hidden" name="montant_ht"  id="hiddenHT">
+      <input type="hidden" name="montant_ttc" id="hiddenTTC">
+
+      <!-- Remarques -->
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label">Remarques</label>
+        <textarea class="form-control" name="remarques" rows="2"
+                  placeholder="Conditions particulières, délais de validité..."></textarea>
+      </div>
+    </div>
+
+    <div class="callout callout-orange">
+      <i class="ti ti-info-circle"></i>
+      <div>
+        <strong>Processus d'acceptation :</strong>
+        Le devis est transmis au client en PDF. En cas d'acceptation, le client doit inscrire
+        la mention <strong>« Bon pour accord »</strong>, indiquer la date et
+        <strong>signer manuellement</strong> avant de retourner le document.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Colonne droite : aperçu PDF ── -->
+  <div>
+    <div style="font-size:11px;font-weight:600;color:var(--dark);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+      <i class="ti ti-eye" style="color:var(--indigo);font-size:15px;"></i>
+      Aperçu du devis (style PDF)
+    </div>
+
+    <div class="preview-wrap">
+      <!-- Header coloré -->
+      <div class="prev-header-bar">
+        <div class="prev-logo-zone">
+          {% if entreprise.logo %}
+          <img src="{{ url_for('static', filename=entreprise.logo) }}" alt="Logo">
+          {% else %}
+          <i class="ti ti-building-store"></i>
+          {% endif %}
+        </div>
+        <div class="prev-title-zone">
+          <div class="prev-devis-title">DEVIS</div>
+          <div class="prev-devis-num">{{ prochain_numero }}</div>
+          <div class="prev-devis-date" id="prevDate">Date : —</div>
+        </div>
+      </div>
+
+      <div class="prev-body">
+        <!-- Parties -->
+        <div class="prev-parties">
+          <div class="prev-party-box">
+            <div class="prev-party-label">Émetteur</div>
+            <div class="prev-party-name">{{ entreprise.nom or '—' }}</div>
+            <div class="prev-party-info">
+              {{ entreprise.adresse or '' }}<br>
+              {{ entreprise.email or '' }}<br>
+              {{ entreprise.telephone or '' }}<br>
+              {% if entreprise.siret %}SIRET : {{ entreprise.siret }}{% endif %}
+            </div>
+          </div>
+          <div class="prev-party-box" id="prevClientBox">
+            <div class="prev-party-label">Client</div>
+            <div class="prev-party-name" id="prevClientName">—</div>
+            <div class="prev-party-info" id="prevClientInfo">—</div>
+          </div>
+        </div>
+
+        <!-- Référence -->
+        <div id="prevRef" style="font-size:10px;font-weight:600;color:#1e1b4b;text-align:center;margin-bottom:10px;padding:6px;background:#f0f4ff;border-radius:5px;display:none;"></div>
+
+        <!-- Tableau lignes -->
+        <table class="prev-table">
+          <thead>
+            <tr>
+              <th>N°</th>
+              <th style="width:40%;">Description</th>
+              <th style="text-align:center;">Qté</th>
+              <th style="text-align:center;">U</th>
+              <th style="text-align:right;">Prix U.</th>
+              <th style="text-align:right;">TVA</th>
+              <th style="text-align:right;">Total</th>
+            </tr>
+          </thead>
+          <tbody id="prevLines">
+            <tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:10px;font-size:9px;">Ajoutez des lignes de prestation...</td></tr>
+          </tbody>
+        </table>
+
+        <!-- Totaux -->
+        <div class="prev-totals">
+          <div class="prev-totals-box">
+            <div class="prev-tot-row"><span>Total HT</span><span id="prevHT">0,00 €</span></div>
+            <div class="prev-tot-row"><span id="prevTVALabel">TVA (20%)</span><span id="prevTVA">0,00 €</span></div>
+            <div class="prev-tot-row final"><span>Total TTC</span><span id="prevTTC">0,00 €</span></div>
+          </div>
+        </div>
+
+        <!-- Conditions de paiement -->
+        <div class="prev-conditions">
+          <strong>Conditions de paiement :</strong>
+          30 jours après date de facturation<br>
+          Nos conditions habituelles de paiement :<br>
+          40% à la commande — 50% en cours de travaux<br>
+          Le solde à la terminaison des travaux, Payable à réception<br>
+          {% if entreprise.iban %}<strong>IBAN : {{ entreprise.iban }}</strong><br>{% endif %}
+          {% if entreprise.bic %}<strong>BIC : {{ entreprise.bic }}</strong>{% endif %}
+        </div>
+
+        <!-- Zone signature -->
+        <div>
+          <div class="prev-signature-label">Pour le client</div>
+          <div class="prev-signature-box">
+            <div class="prev-signature-mention">Mention "Lu et approuvé", date et signature</div>
+            <div class="prev-signature-accord">Pour accord y inclus les conditions ci-dessous</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="prev-footer">
+        {{ entreprise.nom or '' }}
+        {% if entreprise.adresse %} — {{ entreprise.adresse }}{% endif %}
+        {% if entreprise.siret %}<br>SIRET : {{ entreprise.siret }}{% endif %}
+        {% if entreprise.forme %} — {{ entreprise.forme }}{% endif %}
+        {% if entreprise.capital %} — Capital : {{ entreprise.capital }}{% endif %}
+      </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:7px;">
+      <button type="submit" form="devisForm"
+              class="btn btn-primary" style="width:100%;justify-content:center;">
+        <i class="ti ti-device-floppy"></i> Enregistrer le devis
+      </button>
+
+    </div>
+  </div>
+
+</div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  var fmt = function(v) {
+    return parseFloat(v || 0).toLocaleString('fr-FR', {
+      minimumFractionDigits: 2, maximumFractionDigits: 2
+    }) + ' €';
+  };
+
+  var lines = [];
+  var lineId = 0;
+
+  // ── Ajouter une ligne ──────────────────────────────────────────────────
+  function addLine() {
+    var id = lineId++;
+    lines.push({ id: id, desc: '', unite: 'Ens.', qty: 1, pu: 0 });
+    renderLines();
+  }
+
+  // ── Supprimer une ligne ────────────────────────────────────────────────
+  function removeLine(id) {
+    lines = lines.filter(function(l) { return l.id !== id; });
+    renderLines();
+    calcTotals();
+  }
+
+  // ── Afficher les lignes ────────────────────────────────────────────────
+  function renderLines() {
+    var container = document.getElementById('linesContainer');
+    container.innerHTML = '';
+
+    lines.forEach(function(l) {
+      var row = document.createElement('div');
+      row.className = 'line-row';
+      row.innerHTML =
+        '<input class="line-inp" placeholder="Description de la prestation..." value="' + (l.desc||'') + '"' +
+          ' oninput="updateField(' + l.id + ',\'desc\',this.value)">' +
+
+        '<input class="line-inp" placeholder="Ens./M²/ML/Mois..." value="' + (l.unite||'Ens.') + '"' +
+          ' style="text-align:center;" oninput="updateField(' + l.id + ',\'unite\',this.value)">' +
+
+        '<input class="line-inp" type="number" min="0" step="0.01" value="' + l.qty + '"' +
+          ' style="text-align:center;" oninput="updateField(' + l.id + ',\'qty\',parseFloat(this.value)||0)">' +
+
+        '<input class="line-inp" type="number" min="0" step="0.01" value="' + (l.pu||'') + '"' +
+          ' placeholder="0,00" style="text-align:right;" oninput="updateField(' + l.id + ',\'pu\',parseFloat(this.value)||0)">' +
+
+        '<div class="line-total" id="lt-' + l.id + '">' + fmt(l.qty * l.pu) + '</div>' +
+
+        '<button type="button" class="btn btn-danger btn-sm"' +
+          ' onclick="removeLine(' + l.id + ')" style="padding:4px 7px;">' +
+          '<i class="ti ti-trash"></i></button>';
+
+      container.appendChild(row);
+    });
+
+    calcTotals();
+  }
+
+  // ── Mettre à jour un champ d'une ligne ─────────────────────────────────
+  function updateField(id, field, val) {
+    var l = lines.find(function(x) { return x.id === id; });
+    if (!l) return;
+    l[field] = val;
+    var tot = document.getElementById('lt-' + id);
+    if (tot) tot.textContent = fmt(l.qty * l.pu);
+    calcTotals();
+  }
+
+  // ── Calculer les totaux ────────────────────────────────────────────────
+  function calcTotals() {
+    // Mettre à jour les champs cachés pour l'envoi serveur
+    updateHiddenLines();
+
+    var ht  = lines.reduce(function(s, l) { return s + (l.qty * l.pu); }, 0);
+    var tva = parseFloat(document.getElementById('tvaInput').value) || 0;
+    var tvaAmt = ht * tva / 100;
+    var ttc    = ht + tvaAmt;
+
+    // Affichage formulaire
+    document.getElementById('outHT').textContent  = fmt(ht);
+    document.getElementById('outTVA').textContent = fmt(tvaAmt);
+    document.getElementById('outTTC').textContent = fmt(ttc);
+
+    // Champs cachés pour soumission
+    document.getElementById('hiddenHT').value  = ht.toFixed(2);
+    document.getElementById('hiddenTTC').value = ttc.toFixed(2);
+
+    // Aperçu
+    document.getElementById('prevHT').textContent       = fmt(ht);
+    document.getElementById('prevTVA').textContent      = fmt(tvaAmt);
+    document.getElementById('prevTTC').textContent      = fmt(ttc);
+    document.getElementById('prevTVALabel').textContent = 'TVA (' + tva + '%)';
+
+    // Aperçu tableau lignes
+    var prevLines = document.getElementById('prevLines');
+    var active = lines.filter(function(l) { return l.desc || l.pu; });
+
+    if (active.length === 0) {
+      prevLines.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:10px;font-size:9px;">Ajoutez des lignes de prestation...</td></tr>';
+    } else {
+      prevLines.innerHTML = active.map(function(l, i) {
+        return '<tr>' +
+          '<td style="color:#6366f1;font-weight:600;">' + (i + 1) + '</td>' +
+          '<td>' + (l.desc || '—') + '</td>' +
+          '<td style="text-align:center;">' + l.qty + '</td>' +
+          '<td style="text-align:center;color:#64748b;">' + (l.unite || 'Ens.') + '</td>' +
+          '<td style="text-align:right;">' + fmt(l.pu) + '</td>' +
+          '<td style="text-align:center;color:#64748b;">' + tva + '%</td>' +
+          '<td>' + fmt(l.qty * l.pu) + '</td>' +
+          '</tr>';
+      }).join('');
+    }
+  }
+
+  // ── Champs cachés pour soumission ──────────────────────────────────────
+  function updateHiddenLines() {
+    var div = document.getElementById('hiddenLines');
+    div.innerHTML = '';
+    lines.forEach(function(l) {
+      div.innerHTML +=
+        '<input type="hidden" name="ligne_desc[]"  value="' + (l.desc||'') + '">' +
+        '<input type="hidden" name="ligne_type[]"  value="' + (l.unite||'') + '">' +
+        '<input type="hidden" name="ligne_qty[]"   value="' + l.qty + '">' +
+        '<input type="hidden" name="ligne_pu[]"    value="' + l.pu + '">';
+    });
+  }
+
+  // ── Mise à jour aperçu client ──────────────────────────────────────────
+  // ── Autocomplétion client ─────────────────────────────────────────────────
+  function searchClient(val) {
+    var box = document.getElementById('clientSuggestions');
+    if (!val || val.length < 1) { box.style.display = 'none'; return; }
+
+    var matches = clientsDB.filter(function(c) {
+      var fullName = (c.nom + ' ' + c.prenom).toLowerCase();
+      return fullName.indexOf(val.toLowerCase()) !== -1 ||
+             (c.nom && c.nom.toLowerCase().indexOf(val.toLowerCase()) !== -1);
+    });
+
+    if (matches.length === 0) { box.style.display = 'none'; return; }
+
+    box.innerHTML = '';
+    matches.forEach(function(c) {
+      var item = document.createElement('div');
+      var fullName = (c.nom + (c.prenom ? ' ' + c.prenom : '')).trim();
+      item.innerHTML =
+        '<div style="font-weight:600;color:var(--dark);font-size:12px;">' + fullName + '</div>' +
+        '<div style="font-size:10px;color:var(--gray);">' + (c.email || '') + (c.telephone ? ' · ' + c.telephone : '') + '</div>';
+      item.style.cssText = 'padding:10px 14px;cursor:pointer;border-bottom:1px solid #f1f5f9;';
+      item.onmouseover = function() { this.style.background = '#eef2ff'; };
+      item.onmouseout  = function() { this.style.background = ''; };
+      item.onclick = function() {
+        // Remplir tous les champs
+        document.getElementById('cNom').value  = c.nom || '';
+        document.getElementById('cPre').value  = c.prenom || '';
+        document.getElementById('cMail').value = c.email || '';
+        document.getElementById('cTel').value  = c.telephone || '';
+        document.getElementById('cAdr').value  = c.adresse || '';
+        box.style.display = 'none';
+        updatePreview();
+      };
+      box.appendChild(item);
+    });
+    box.style.display = 'block';
+  }
+
+  // Fermer suggestions si clic ailleurs
+  document.addEventListener('click', function(e) {
+    var input = document.getElementById('cNom');
+    var box   = document.getElementById('clientSuggestions');
+    if (box && input && !input.contains(e.target) && !box.contains(e.target)) {
+      box.style.display = 'none';
+    }
+  });
+
+  // ── Mise à jour aperçu ─────────────────────────────────────────────────────
+  function updatePreview() {
+    var nom  = document.getElementById('cNom').value;
+    var pre  = document.getElementById('cPre').value;
+    var mail = document.getElementById('cMail').value;
+    var adr  = document.getElementById('cAdr').value;
+    var dt   = document.getElementById('dateDevis').value;
+    var ref  = document.getElementById('reference').value;
+
+    // Nom client
+    var fullName = (nom + ' ' + pre).trim() || '—';
+    document.getElementById('prevClientName').textContent = fullName;
+
+    // Infos client
+    var info = [adr, mail].filter(Boolean).join('\n');
+    document.getElementById('prevClientInfo').innerHTML = info
+      ? info.replace(/\n/g, '<br>') : '—';
+
+    // Date
+    document.getElementById('prevDate').textContent = dt
+      ? 'Date : ' + new Date(dt + 'T00:00:00').toLocaleDateString('fr-FR') : 'Date : —';
+
+    // Référence
+    var refEl = document.getElementById('prevRef');
+    if (ref) {
+      refEl.textContent = 'Référence : ' + ref;
+      refEl.style.display = 'block';
+    } else {
+      refEl.style.display = 'none';
+    }
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────
+  addLine(); // Une ligne vide par défaut
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('dateDevis').value = today;
+  updatePreview();
+  calcTotals();
+</script>
+{% endblock %}

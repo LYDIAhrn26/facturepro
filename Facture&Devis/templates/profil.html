@@ -1,0 +1,426 @@
+{% extends "base.html" %}
+{% block title %}Mon profil — FacturePro{% endblock %}
+{% block page_title %}Profil entreprise{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profil-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* Carte résumé gauche */
+  .profil-card {
+    background: var(--surf); border: 1px solid var(--bdr);
+    border-radius: 16px; padding: 28px 20px;
+    text-align: center; box-shadow: var(--shadow);
+    position: sticky; top: 76px;
+  }
+  .profil-logo-wrap {
+    width: 88px; height: 88px; border-radius: 18px;
+    background: linear-gradient(135deg, var(--indigo), var(--violet));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; color: #fff; margin: 0 auto 14px;
+    overflow: hidden; cursor: pointer; position: relative; transition: all .2s;
+  }
+  .profil-logo-wrap:hover .logo-hover { opacity: 1; }
+  .profil-logo-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .logo-hover {
+    position: absolute; inset: 0;
+    background: rgba(30,27,75,.55);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .2s; color: #fff; font-size: 20px;
+  }
+  .profil-name { font-size: 16px; font-weight: 600; color: var(--dark); margin-bottom: 4px; }
+  .profil-forme { font-size: 12px; color: var(--gray); margin-bottom: 16px; }
+  .profil-divider { border: none; border-top: 1px solid var(--bdr); margin: 14px 0; }
+  .profil-info {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 11px; color: var(--gray2); margin-bottom: 8px; text-align: left;
+  }
+  .profil-info i { font-size: 13px; color: var(--indigo); flex-shrink: 0; margin-top: 1px; }
+
+  /* Onglets */
+  .tabs-bar {
+    display: flex; gap: 4px; background: var(--bg);
+    border: 1px solid var(--bdr); border-radius: 10px;
+    padding: 4px; margin-bottom: 18px;
+  }
+  .tab-btn {
+    flex: 1; padding: 8px 10px; border-radius: 7px; border: none;
+    background: transparent; color: var(--gray); font-size: 11px;
+    font-weight: 500; cursor: pointer; font-family: var(--fn);
+    transition: all .2s; display: flex; align-items: center;
+    justify-content: center; gap: 5px;
+  }
+  .tab-btn.active {
+    background: var(--surf); color: var(--indigo);
+    box-shadow: var(--shadow); font-weight: 600;
+  }
+  .tab-pane { display: none; animation: fadeIn .2s ease; }
+  .tab-pane.active { display: block; }
+
+  /* Sections formulaire */
+  .profil-section {
+    background: var(--surf); border: 1px solid var(--bdr);
+    border-radius: 14px; padding: 22px;
+    margin-bottom: 14px; box-shadow: var(--shadow);
+  }
+  .profil-section-title {
+    font-size: 13px; font-weight: 600; color: var(--dark);
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    padding-bottom: 10px; border-bottom: 2px solid var(--indigo-bg);
+  }
+  .profil-section-title i { color: var(--indigo); font-size: 16px; }
+
+  /* Logo upload zone */
+  .logo-upload-zone {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px; background: var(--bg);
+    border: 2px dashed var(--bdr2); border-radius: 10px;
+    cursor: pointer; transition: all .2s; margin-bottom: 16px;
+  }
+  .logo-upload-zone:hover { border-color: var(--indigo); background: var(--indigo-bg); }
+  .logo-preview-zone {
+    width: 52px; height: 52px; border-radius: 10px;
+    background: var(--indigo-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: var(--indigo);
+    overflow: hidden; flex-shrink: 0;
+  }
+  .logo-preview-zone img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Force MDP */
+  .pwd-bar { height: 4px; border-radius: 99px; background: var(--bdr); overflow: hidden; margin-top: 6px; }
+  .pwd-fill { height: 100%; border-radius: 99px; transition: width .3s, background .3s; }
+  .pwd-label { font-size: 10px; color: var(--gray); margin-top: 3px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Mon profil</h1>
+    <div class="page-subtitle">Gérez les informations de votre entreprise</div>
+  </div>
+</div>
+
+<div class="profil-grid">
+
+  <!-- Colonne gauche -->
+  <div>
+    <div class="profil-card">
+      <div class="profil-logo-wrap" onclick="document.getElementById('logoQuick').click()">
+        {% if entreprise.logo %}
+        <img src="{{ url_for('static', filename=entreprise.logo) }}" alt="Logo" id="cardLogoImg">
+        {% else %}
+        <i class="ti ti-building-store" id="cardLogoIcon"></i>
+        {% endif %}
+        <div class="logo-hover"><i class="ti ti-camera"></i></div>
+      </div>
+      <input type="file" id="logoQuick" accept=".png,.jpg,.jpeg,.svg,.webp"
+             style="display:none;" onchange="quickLogoPreview(this)">
+      <div style="font-size:10px;color:var(--gray);margin-bottom:16px;">Cliquez pour changer</div>
+
+      <div class="profil-name">{{ entreprise.nom or '—' }}</div>
+      <div class="profil-forme">{{ entreprise.forme or '' }}{% if entreprise.capital %} — {{ entreprise.capital }}{% endif %}</div>
+
+      <hr class="profil-divider">
+      {% if entreprise.dirigeant %}<div class="profil-info"><i class="ti ti-user"></i>{{ entreprise.dirigeant }}</div>{% endif %}
+      {% if entreprise.email %}<div class="profil-info"><i class="ti ti-mail"></i>{{ entreprise.email }}</div>{% endif %}
+      {% if entreprise.telephone %}<div class="profil-info"><i class="ti ti-phone"></i>{{ entreprise.telephone }}</div>{% endif %}
+      {% if entreprise.adresse %}<div class="profil-info"><i class="ti ti-map-pin"></i>{{ entreprise.adresse }}</div>{% endif %}
+      {% if entreprise.siret %}<div class="profil-info"><i class="ti ti-id-badge"></i>SIRET : {{ entreprise.siret }}</div>{% endif %}
+      {% if entreprise.siren %}<div class="profil-info"><i class="ti ti-hash"></i>SIREN : {{ entreprise.siren }}</div>{% endif %}
+      {% if entreprise.activite %}<div class="profil-info"><i class="ti ti-briefcase"></i>{{ entreprise.activite }}</div>{% endif %}
+
+      {% if entreprise.iban or entreprise.bic %}
+      <hr class="profil-divider">
+      {% if entreprise.iban %}<div class="profil-info"><i class="ti ti-credit-card"></i>{{ entreprise.iban }}</div>{% endif %}
+      {% if entreprise.bic %}<div class="profil-info"><i class="ti ti-building-bank"></i>BIC : {{ entreprise.bic }}</div>{% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Colonne droite -->
+  <div>
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="switchTab('entreprise',this)"><i class="ti ti-building-store"></i> Entreprise</button>
+      <button class="tab-btn" onclick="switchTab('coordonnees',this)"><i class="ti ti-map-pin"></i> Coordonnées</button>
+      <button class="tab-btn" onclick="switchTab('bancaire',this)"><i class="ti ti-credit-card"></i> Bancaire</button>
+      <button class="tab-btn" onclick="switchTab('securite',this)"><i class="ti ti-lock"></i> Sécurité</button>
+    </div>
+
+    <!-- ONGLET 1 : Entreprise -->
+    <div class="tab-pane active" id="tab-entreprise">
+      <form method="POST" action="{{ url_for('profil') }}" enctype="multipart/form-data">
+        <input type="hidden" name="onglet" value="entreprise">
+        <div class="profil-section">
+          <div class="profil-section-title"><i class="ti ti-building-store"></i> Informations de l'entreprise</div>
+
+          <input type="file" name="logo" id="logoInput" accept=".png,.jpg,.jpeg,.svg,.webp"
+                 style="display:none;" onchange="previewLogo(this)">
+
+          <div class="logo-upload-zone" onclick="document.getElementById('logoInput').click()">
+            <div class="logo-preview-zone" id="logoPreview">
+              {% if entreprise.logo %}
+              <img src="{{ url_for('static', filename=entreprise.logo) }}" alt="Logo">
+              {% else %}<i class="ti ti-photo"></i>{% endif %}
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;color:var(--indigo);"><i class="ti ti-upload"></i> Changer le logo</div>
+              <div style="font-size:10px;color:var(--gray);">PNG, JPG, SVG — max 2 Mo</div>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group col-span-2">
+              <label class="form-label">Nom de l'entreprise *</label>
+              <input class="form-control" type="text" name="nom_entreprise" value="{{ entreprise.nom or '' }}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Forme juridique</label>
+              <select class="form-control" name="forme_juridique">
+                {% for f in ['SAS','SARL','EURL','Entreprise individuelle','SA','SNC','Auto-entrepreneur','Autre'] %}
+                <option value="{{ f }}" {% if entreprise.forme == f %}selected{% endif %}>{{ f }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Capital social (€)</label>
+              <input class="form-control" type="text" name="capital"
+                     value="{{ entreprise.capital|replace(' €','') if entreprise.capital else '' }}"
+                     placeholder="5 400">
+            </div>
+            <div class="form-group">
+              <label class="form-label">SIRET</label>
+              <input class="form-control" type="text" name="siret" value="{{ entreprise.siret or '' }}" placeholder="Ex : 12345678900012">
+            </div>
+            <div class="form-group">
+              <label class="form-label">SIREN</label>
+              <input class="form-control" type="text" name="siren" value="{{ entreprise.siren or '' }}" placeholder="Ex : 123456789">
+            </div>
+            <div class="form-group col-span-2">
+              <label class="form-label">Secteur d'activité</label>
+              <input class="form-control" type="text" name="activite" value="{{ entreprise.activite or '' }}" placeholder="Transports terrestres, BTP, Informatique...">
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Enregistrer</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ONGLET 2 : Coordonnées -->
+    <div class="tab-pane" id="tab-coordonnees">
+      <form method="POST" action="{{ url_for('profil') }}">
+        <input type="hidden" name="onglet" value="coordonnees">
+        <div class="profil-section">
+          <div class="profil-section-title"><i class="ti ti-map-pin"></i> Coordonnées de contact</div>
+          <div class="form-grid">
+            <div class="form-group col-span-2">
+              <label class="form-label">Adresse postale complète</label>
+              <input class="form-control" type="text" name="adresse" value="{{ entreprise.adresse or '' }}" placeholder="Ex : 12 rue de la Paix, 75001 Paris">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email professionnel</label>
+              <input class="form-control" type="email" name="email" value="{{ entreprise.email or '' }}" placeholder="contact@monentreprise.fr">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Numéro de téléphone</label>
+              <input class="form-control" type="tel" name="telephone" value="{{ entreprise.telephone or '' }}" placeholder="06 00 00 00 00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Prénom du gérant</label>
+              <input class="form-control" type="text" name="prenom_gerant"
+                     value="{{ user.nom.split()[0] if user.nom and ' ' in user.nom else user.nom or '' }}"
+                     placeholder="Prénom">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nom du gérant</label>
+              <input class="form-control" type="text" name="nom_gerant"
+                     value="{{ user.nom.split()[-1] if user.nom and ' ' in user.nom else '' }}"
+                     placeholder="Nom">
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Enregistrer</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ONGLET 3 : Bancaire -->
+    <div class="tab-pane" id="tab-bancaire">
+      <form method="POST" action="{{ url_for('profil') }}">
+        <input type="hidden" name="onglet" value="bancaire">
+        <div class="profil-section">
+          <div class="profil-section-title"><i class="ti ti-credit-card"></i> Coordonnées bancaires</div>
+          <div style="padding:11px 14px;background:var(--indigo-bg);border:1px solid rgba(99,102,241,.2);border-radius:8px;font-size:12px;color:var(--indigo2);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+            <i class="ti ti-shield-check" style="font-size:16px;color:var(--green);"></i>
+            Ces informations apparaîtront sur vos factures pour le paiement par virement.
+          </div>
+          <div class="form-grid">
+            <div class="form-group col-span-2">
+              <label class="form-label">IBAN</label>
+              <input class="form-control" type="text" name="iban"
+                     value="{{ entreprise.iban or '' }}"
+                     placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX"
+                     oninput="formatIBAN(this)"
+                     style="font-family:var(--mono);">
+            </div>
+            <div class="form-group">
+              <label class="form-label">BIC / SWIFT</label>
+              <input class="form-control" type="text" name="bic"
+                     value="{{ entreprise.bic or '' }}"
+                     placeholder="CMCIFRPP"
+                     style="font-family:var(--mono);">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nom de la banque</label>
+              <input class="form-control" type="text" name="banque" placeholder="Crédit Mutuel, BNP...">
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Enregistrer</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ONGLET 4 : Sécurité -->
+    <div class="tab-pane" id="tab-securite">
+      <form method="POST" action="{{ url_for('profil') }}">
+        <input type="hidden" name="onglet" value="securite">
+        <div class="profil-section">
+          <div class="profil-section-title"><i class="ti ti-lock"></i> Changer le mot de passe</div>
+          <div style="padding:11px 14px;background:var(--bg);border:1px solid var(--bdr);border-radius:8px;font-size:12px;color:var(--gray2);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+            <i class="ti ti-mail" style="color:var(--indigo);"></i>
+            Email de connexion : <strong style="color:var(--dark);">{{ user.email }}</strong>
+          </div>
+          <div class="form-grid cols-1">
+            <div class="form-group">
+              <label class="form-label">Mot de passe actuel *</label>
+              <div style="position:relative;">
+                <input class="form-control" type="password" name="current_password" id="curPwd" placeholder="Votre mot de passe actuel">
+                <button type="button" onclick="togglePwd('curPwd','eyeCur')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);font-size:16px;cursor:pointer;"><i class="ti ti-eye" id="eyeCur"></i></button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nouveau mot de passe *</label>
+              <div style="position:relative;">
+                <input class="form-control" type="password" name="new_password" id="newPwd" placeholder="Minimum 6 caractères" oninput="checkStrength(this.value)">
+                <button type="button" onclick="togglePwd('newPwd','eyeNew')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);font-size:16px;cursor:pointer;"><i class="ti ti-eye" id="eyeNew"></i></button>
+              </div>
+              <div class="pwd-bar"><div class="pwd-fill" id="pwdFill" style="width:0%;"></div></div>
+              <div class="pwd-label" id="pwdLabel">Saisissez un mot de passe</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirmer le nouveau mot de passe *</label>
+              <div style="position:relative;">
+                <input class="form-control" type="password" name="confirm_password" id="confPwd" placeholder="Répéter le mot de passe" oninput="checkMatch()">
+                <button type="button" onclick="togglePwd('confPwd','eyeConf')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);font-size:16px;cursor:pointer;"><i class="ti ti-eye" id="eyeConf"></i></button>
+              </div>
+              <div id="matchErr" style="display:none;font-size:10px;color:var(--red);margin-top:4px;">
+                <i class="ti ti-alert-circle"></i> Les mots de passe ne correspondent pas.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="submit" class="btn btn-primary"><i class="ti ti-lock"></i> Mettre à jour le mot de passe</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
+    document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+    document.getElementById('tab-'+name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function previewLogo(input) {
+    if (!input.files || !input.files[0]) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var zone = document.getElementById('logoPreview');
+      if (zone) zone.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;" alt="Logo">';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+
+  function quickLogoPreview(input) {
+    if (!input.files || !input.files[0]) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var wrap = document.querySelector('.profil-logo-wrap');
+      if (wrap) {
+        wrap.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;" alt="Logo"><div class="logo-hover"><i class="ti ti-camera"></i></div>';
+      }
+      var zone = document.getElementById('logoPreview');
+      if (zone) zone.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;" alt="Logo">';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+
+  function formatIBAN(input) {
+    var val = input.value.replace(/\s/g,'').toUpperCase();
+    var parts = val.match(/.{1,4}/g);
+    input.value = parts ? parts.join(' ') : val;
+  }
+
+  function togglePwd(inputId, iconId) {
+    var inp = document.getElementById(inputId);
+    var ico = document.getElementById(iconId);
+    if (inp.type === 'password') { inp.type = 'text'; ico.className = 'ti ti-eye-off'; }
+    else { inp.type = 'password'; ico.className = 'ti ti-eye'; }
+  }
+
+  function checkStrength(pwd) {
+    var score = 0;
+    if (pwd.length >= 6) score++;
+    if (pwd.length >= 10) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+    var levels = [
+      {pct:'0%',   color:'var(--bdr)',     label:'Saisissez un mot de passe'},
+      {pct:'25%',  color:'var(--red)',     label:'Trop faible'},
+      {pct:'50%',  color:'var(--orange)',  label:'Faible'},
+      {pct:'75%',  color:'#eab308',        label:'Moyen'},
+      {pct:'90%',  color:'var(--teal)',    label:'Fort'},
+      {pct:'100%', color:'var(--green)',   label:'💪 Très fort'},
+    ];
+    var l = levels[Math.min(score,5)];
+    document.getElementById('pwdFill').style.width      = l.pct;
+    document.getElementById('pwdFill').style.background = l.color;
+    document.getElementById('pwdLabel').textContent     = l.label;
+    document.getElementById('pwdLabel').style.color     = l.color;
+  }
+
+  function checkMatch() {
+    var pwd  = document.getElementById('newPwd').value;
+    var conf = document.getElementById('confPwd').value;
+    var err  = document.getElementById('matchErr');
+    if (conf && pwd !== conf) {
+      err.style.display = 'block';
+      document.getElementById('confPwd').style.borderColor = 'var(--red)';
+    } else {
+      err.style.display = 'none';
+      document.getElementById('confPwd').style.borderColor = '';
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+{% block title %}Tableau de bord — FacturePro{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+
+{% block extra_css %}
+<style>
+  .kpi-icon { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .kpi-icon-indigo { background: var(--indigo-bg); color: var(--indigo); }
+  .kpi-icon-teal   { background: var(--teal-bg);   color: var(--teal);   }
+  .kpi-icon-orange { background: var(--orange-bg); color: var(--orange); }
+  .kpi-icon-green  { background: var(--green-bg);  color: var(--green);  }
+  .kpi-card-inner  { display: flex; align-items: center; gap: 14px; }
+  .kpi-card-info   { flex: 1; min-width: 0; }
+
+  .chart-panel { background: var(--surf); border: 1px solid var(--bdr); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
+  .chart-panel-title { font-size: 13px; font-weight: 600; color: var(--dark); }
+  .chart-panel-sub   { font-size: 10px; color: var(--gray); margin-top: 2px; }
+
+  .mini-table { width: 100%; border-collapse: collapse; }
+  .mini-table th { font-size: 9px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--gray); padding: 0 0 8px; border-bottom: 2px solid var(--indigo-bg); text-align: left; }
+  .mini-table td { font-size: 11px; padding: 9px 0; border-bottom: 1px solid #f1f5f9; color: var(--gray2); vertical-align: middle; }
+  .mini-table td.bold { color: var(--dark); font-weight: 500; }
+  .mini-table td.mono { font-family: var(--mono); }
+  .mini-table td.ref  { color: var(--indigo); font-family: var(--mono); font-size: 10px; }
+  .mini-table tr:last-child td { border-bottom: none; }
+
+  .notif-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .notif-icon-green  { background: var(--green-bg);  color: var(--teal); }
+  .notif-icon-indigo { background: var(--indigo-bg); color: var(--indigo); }
+  .notif-icon-orange { background: var(--orange-bg); color: var(--orange); }
+  .notif-msg  { font-size: 11px; color: var(--gray2); line-height: 1.5; }
+  .notif-time { font-size: 9px;  color: var(--gray);  margin-top: 2px; font-family: var(--mono); }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--dark); display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+
+  /* État vide */
+  .empty-mini { text-align: center; padding: 24px 10px; color: var(--gray); font-size: 12px; }
+  .empty-mini i { font-size: 28px; color: var(--bdr2); display: block; margin-bottom: 8px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- KPI -->
+<div class="kpi-grid" style="margin-bottom:22px;">
+  <div class="kpi-card">
+    <div class="kpi-card-inner">
+      <div class="kpi-icon kpi-icon-indigo"><i class="ti ti-file-text"></i></div>
+      <div class="kpi-card-info">
+        <div class="kpi-label">Devis créés</div>
+        <div class="kpi-value">{{ nb_devis }}</div>
+        <div class="kpi-sub info">Total de vos devis</div>
+      </div>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-card-inner">
+      <div class="kpi-icon kpi-icon-teal"><i class="ti ti-receipt-2"></i></div>
+      <div class="kpi-card-info">
+        <div class="kpi-label">Factures émises</div>
+        <div class="kpi-value">{{ nb_factures }}</div>
+        <div class="kpi-sub info">{{ nb_payees }} payées · {{ nb_attente }} en attente</div>
+      </div>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-card-inner">
+      <div class="kpi-icon kpi-icon-orange"><i class="ti ti-currency-euro"></i></div>
+      <div class="kpi-card-info">
+        <div class="kpi-label">CA encaissé</div>
+        <div class="kpi-value">{{ "%.0f"|format(ca) }}</div>
+        <div class="kpi-sub warn">€ TTC payées</div>
+      </div>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-card-inner">
+      <div class="kpi-icon kpi-icon-green"><i class="ti ti-users"></i></div>
+      <div class="kpi-card-info">
+        <div class="kpi-label">Clients</div>
+        <div class="kpi-value">{{ nb_clients }}</div>
+        <div class="kpi-sub up">Dans votre base</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Derniers devis + Dernières factures -->
+<div class="grid-2" style="margin-bottom:22px;">
+
+  <!-- Derniers devis -->
+  <div class="panel">
+    <div class="section-title">
+      Derniers devis
+      <a href="{{ url_for('liste_devis') }}" class="btn btn-ghost btn-sm">
+        Voir tout <i class="ti ti-arrow-right"></i>
+      </a>
+    </div>
+    {% if derniers_devis %}
+    <table class="mini-table">
+      <thead>
+        <tr>
+          <th>Réf.</th>
+          <th>Client</th>
+          <th style="text-align:right;">TTC</th>
+          <th style="text-align:right;">Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in derniers_devis %}
+        <tr>
+          <td class="ref">{{ d.numero_devis }}</td>
+          <td class="bold">{{ d.client_nom or '—' }}</td>
+          <td class="mono" style="text-align:right;">{{ "%.2f"|format(d.montant_ttc|float) }} €</td>
+          <td style="text-align:right;color:var(--gray);">
+            {{ d.date_devis.strftime('%d/%m') if d.date_devis else '—' }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-mini">
+      <i class="ti ti-file-off"></i>
+      Aucun devis créé pour le moment.<br>
+      <a href="{{ url_for('nouveau_devis') }}" style="color:var(--indigo);font-weight:500;">
+        Créer mon premier devis →
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Dernières factures -->
+  <div class="panel">
+    <div class="section-title">
+      Dernières factures
+      <a href="{{ url_for('liste_factures') }}" class="btn btn-ghost btn-sm">
+        Voir tout <i class="ti ti-arrow-right"></i>
+      </a>
+    </div>
+    {% if dernieres_factures %}
+    <table class="mini-table">
+      <thead>
+        <tr>
+          <th>Réf.</th>
+          <th>Client</th>
+          <th style="text-align:right;">TTC</th>
+          <th style="text-align:right;">Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in dernieres_factures %}
+        <tr>
+          <td class="ref">{{ f.numero_facture }}</td>
+          <td class="bold">{{ f.client_nom or '—' }}</td>
+          <td class="mono" style="text-align:right;">{{ "%.2f"|format(f.montant_ttc|float) }} €</td>
+          <td style="text-align:right;">
+            {% if f.statut_paiement == 'PAYEE' %}
+              <span class="badge badge-green">Payée</span>
+            {% else %}
+              <span class="badge badge-orange">En attente</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-mini">
+      <i class="ti ti-receipt-off"></i>
+      Aucune facture créée pour le moment.<br>
+      <a href="{{ url_for('nouvelle_facture') }}" style="color:var(--indigo);font-weight:500;">
+        Créer ma première facture →
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Notifications -->
+<div class="panel">
+  <div class="section-title">
+    Notifications récentes
+    {% if notifications %}
+    <span class="badge badge-orange">{{ notifications|length }} nouvelle(s)</span>
+    {% endif %}
+  </div>
+
+  {% if notifications %}
+    {% for n in notifications %}
+    <div class="notif-item">
+      <div class="notif-icon
+        {% if n.type_notif == 'success' %}notif-icon-green
+        {% elif n.type_notif == 'warning' %}notif-icon-orange
+        {% else %}notif-icon-indigo{% endif %}">
+        <i class="ti ti-{% if n.type_notif == 'success' %}check{% elif n.type_notif == 'warning' %}clock{% else %}bell{% endif %}"></i>
+      </div>
+      <div>
+        <div class="notif-msg">{{ n.message }}</div>
+        <div class="notif-time">
+          {{ n.created_at.strftime('%d/%m/%Y à %H:%M') if n.created_at else '—' }}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty-mini">
+    <i class="ti ti-bell-off"></i>
+    Aucune notification pour le moment.<br>
+    Créez un devis ou une facture pour commencer !
+  </div>
+  {% endif %}
+</div>
+
+
+<!-- ══ GRAPHIQUES ══════════════════════════════════════════════════════════ -->
+<div class="grid-2" style="margin-top:22px;">
+
+  <!-- Graphique Devis -->
+  <div class="panel">
+    <div class="section-title" style="margin-bottom:16px;">
+      <span style="display:flex;align-items:center;gap:8px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:var(--indigo);display:inline-block;"></span>
+        Progression des devis
+      </span>
+      <span style="font-size:11px;font-weight:400;color:var(--gray);">{{ nb_devis }} au total</span>
+    </div>
+    <canvas id="chartDevis" height="180"></canvas>
+  </div>
+
+  <!-- Graphique Factures -->
+  <div class="panel">
+    <div class="section-title" style="margin-bottom:16px;">
+      <span style="display:flex;align-items:center;gap:8px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:var(--teal);display:inline-block;"></span>
+        Progression des factures
+      </span>
+      <span style="font-size:11px;font-weight:400;color:var(--gray);">{{ nb_factures }} au total</span>
+    </div>
+    <canvas id="chartFactures" height="180"></canvas>
+  </div>
+
+</div>
+
+<!-- Graphique CA mensuel -->
+<div class="panel" style="margin-top:22px;">
+  <div class="section-title" style="margin-bottom:16px;">
+    <span style="display:flex;align-items:center;gap:8px;">
+      <span style="width:10px;height:10px;border-radius:50%;background:var(--orange);display:inline-block;"></span>
+      Chiffre d'affaires mensuel
+    </span>
+    <span style="font-size:11px;font-weight:400;color:var(--gray);">{{ "%.0f"|format(ca) }} € encaissés</span>
+  </div>
+  <canvas id="chartCA" height="120"></canvas>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  // ── Animation KPI ────────────────────────────────────────────────────────
+  document.querySelectorAll('.kpi-card').forEach(function(card, i) {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(14px)';
+    setTimeout(function() {
+      card.style.transition = 'opacity .3s ease, transform .3s ease';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, i * 80);
+  });
+
+  // ── Vraies données depuis Flask BDD ──────────────────────────────────────
+  var mois              = {{ mois_labels|safe }};
+  var devisParMois      = {{ devis_par_mois|safe }};
+  var facturesParMois   = {{ factures_par_mois|safe }};
+  var caParMois         = {{ ca_par_mois|safe }};
+  var nbPayees          = {{ nb_payees }};
+
+  // ── Graphique Devis ───────────────────────────────────────────────────────
+  var ctxD = document.getElementById('chartDevis').getContext('2d');
+  var gradD = ctxD.createLinearGradient(0, 0, 0, 200);
+  gradD.addColorStop(0, 'rgba(99,102,241,0.4)');
+  gradD.addColorStop(1, 'rgba(99,102,241,0.02)');
+
+  new Chart(ctxD, {
+    type: 'line',
+    data: {
+      labels: mois,
+      datasets: [{
+        label: 'Devis créés',
+        data: devisParMois,
+        borderColor: '#6366f1',
+        backgroundColor: gradD,
+        borderWidth: 3,
+        pointBackgroundColor: '#6366f1',
+        pointRadius: 5,
+        pointHoverRadius: 8,
+        fill: true,
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true,
+      animation: { duration: 1200, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1e1b4b',
+          titleColor: '#fff',
+          bodyColor: 'rgba(255,255,255,.8)',
+          padding: 10,
+          cornerRadius: 8,
+          callbacks: {
+            label: function(ctx) { return ' ' + ctx.parsed.y + ' devis'; }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(99,102,241,.06)' },
+          ticks: { color: '#94a3b8', font: { size: 11 } }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(99,102,241,.06)' },
+          ticks: {
+            color: '#94a3b8', font: { size: 11 },
+            stepSize: 1,
+            callback: function(v) { return v % 1 === 0 ? v : ''; }
+          }
+        }
+      }
+    }
+  });
+
+  // ── Graphique Factures ────────────────────────────────────────────────────
+  var ctxF = document.getElementById('chartFactures').getContext('2d');
+  var gradF = ctxF.createLinearGradient(0, 0, 0, 200);
+  gradF.addColorStop(0, 'rgba(13,148,136,0.4)');
+  gradF.addColorStop(1, 'rgba(13,148,136,0.02)');
+
+  new Chart(ctxF, {
+    type: 'bar',
+    data: {
+      labels: mois,
+      datasets: [
+        {
+          label: 'Factures émises',
+          data: facturesParMois,
+          backgroundColor: 'rgba(99,102,241,0.85)',
+          borderRadius: 6,
+          borderSkipped: false,
+        },
+        {
+          label: 'Payées',
+          data: Array(facturesParMois.length).fill(0).map(function(_, i) {
+            return Math.min(facturesParMois[i], nbPayees > 0 ? Math.round(facturesParMois[i] * (nbPayees / ({{ nb_factures }} || 1))) : 0);
+          }),
+          backgroundColor: 'rgba(13,148,136,0.85)',
+          borderRadius: 6,
+          borderSkipped: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      animation: { duration: 1200, easing: 'easeInOutQuart', delay: function(ctx) { return ctx.dataIndex * 80; } },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: { color: '#64748b', font: { size: 11 }, boxWidth: 12, boxHeight: 12, borderRadius: 3 }
+        },
+        tooltip: {
+          backgroundColor: '#1e1b4b',
+          titleColor: '#fff',
+          bodyColor: 'rgba(255,255,255,.8)',
+          padding: 10, cornerRadius: 8,
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#94a3b8', font: { size: 11 } }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(99,102,241,.06)' },
+          ticks: {
+            color: '#94a3b8', font: { size: 11 },
+            stepSize: 1,
+            callback: function(v) { return v % 1 === 0 ? v : ''; }
+          }
+        }
+      }
+    }
+  });
+
+  // ── Graphique CA mensuel ──────────────────────────────────────────────────
+  var ctxCA = document.getElementById('chartCA').getContext('2d');
+  var gradCA = ctxCA.createLinearGradient(0, 0, 0, 140);
+  gradCA.addColorStop(0, 'rgba(245,158,11,0.5)');
+  gradCA.addColorStop(1, 'rgba(245,158,11,0.02)');
+
+  new Chart(ctxCA, {
+    type: 'line',
+    data: {
+      labels: mois,
+      datasets: [{
+        label: 'CA (€)',
+        data: caParMois,
+        borderColor: '#f59e0b',
+        backgroundColor: gradCA,
+        borderWidth: 3,
+        pointBackgroundColor: '#f59e0b',
+        pointRadius: 5,
+        pointHoverRadius: 8,
+        fill: true,
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true,
+      animation: { duration: 1400, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1e1b4b',
+          titleColor: '#fff',
+          bodyColor: 'rgba(255,255,255,.8)',
+          padding: 10, cornerRadius: 8,
+          callbacks: {
+            label: function(ctx) {
+              return ' ' + ctx.parsed.y.toLocaleString('fr-FR', {minimumFractionDigits:2}) + ' €';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(245,158,11,.06)' },
+          ticks: { color: '#94a3b8', font: { size: 11 } }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(245,158,11,.06)' },
+          ticks: {
+            color: '#94a3b8', font: { size: 11 },
+            callback: function(v) { return v.toLocaleString('fr-FR') + ' €'; }
+          }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

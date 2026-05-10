@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion — FacturePro</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Tabler Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+  <!-- CSS Global -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-body">
+
+<div class="login-page">
+
+  <!-- Panneau gauche décoratif -->
+  <div class="login-left">
+    <div class="login-left-content">
+      <div class="login-brand">
+        <div class="login-brand-icon">
+          <i class="ti ti-truck-delivery"></i>
+        </div>
+        <div class="login-brand-name">FacturePro</div>
+      </div>
+      <h1 class="login-headline">
+        Gérez vos devis<br>et factures<br>
+        <span class="login-headline-accent">en toute simplicité.</span>
+      </h1>
+      <p class="login-tagline">
+        Pour toutes les entreprises, artisans et professionnels indépendants.
+      </p>
+      <div class="login-features">
+        <div class="login-feature">
+          <i class="ti ti-file-text"></i>
+          <span>Création de devis rapide</span>
+        </div>
+        <div class="login-feature">
+          <i class="ti ti-receipt-2"></i>
+          <span>Suivi des factures en temps réel</span>
+        </div>
+        <div class="login-feature">
+          <i class="ti ti-chart-bar"></i>
+          <span>Tableau de bord analytique</span>
+        </div>
+        <div class="login-feature">
+          <i class="ti ti-shield-lock"></i>
+          <span>Données sécurisées et chiffrées</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panneau droit : formulaire -->
+  <div class="login-right">
+    <div class="login-card">
+
+      <div class="login-card-header">
+        <div class="login-card-logo">
+          <i class="ti ti-building-store"></i>
+        </div>
+        <h2 class="login-card-title">Connexion</h2>
+        <p class="login-card-subtitle">Accédez à votre espace de gestion</p>
+      </div>
+
+      <!-- Messages flash (activation, etc.) -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+          <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:9px;font-size:13px;font-weight:500;margin-bottom:16px;animation:fadeIn .3s ease;
+            {% if category == 'success' %}background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;
+            {% elif category == 'error' %}background:#fef2f2;border:1px solid #fecaca;color:#991b1b;
+            {% else %}background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;{% endif %}">
+            <i class="ti ti-{% if category == 'success' %}circle-check{% elif category == 'error' %}alert-circle{% else %}info-circle{% endif %}" style="font-size:18px;flex-shrink:0;"></i>
+            {{ message }}
+          </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Message d'erreur connexion -->
+      {% if error %}
+      <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:9px;font-size:13px;font-weight:500;margin-bottom:16px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;">
+        <i class="ti ti-alert-circle" style="font-size:18px;flex-shrink:0;"></i>
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <form class="login-form" method="POST" action="{{ url_for('login') }}">
+
+        <div class="form-group">
+          <label class="form-label" for="email">
+            <i class="ti ti-mail"></i> Adresse email
+          </label>
+          <input
+            class="form-input {% if error %}input-error{% endif %}"
+            type="email"
+            id="email"
+            name="email"
+            placeholder="votre@email.fr"
+            value="{{ request.form.get('email', '') }}"
+            required
+            autofocus
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">
+            <i class="ti ti-lock"></i> Mot de passe
+          </label>
+          <div class="input-password-wrap">
+            <input
+              class="form-input {% if error %}input-error{% endif %}"
+              type="password"
+              id="password"
+              name="password"
+              placeholder="••••••••"
+              required
+            >
+            <button type="button" class="toggle-password" onclick="togglePassword()" title="Afficher le mot de passe">
+              <i class="ti ti-eye" id="eye-icon"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="login-forgot">
+          <a href="#" class="forgot-link">Mot de passe oublié ?</a>
+        </div>
+
+        <button type="submit" class="login-btn">
+          <i class="ti ti-login"></i>
+          Se connecter
+        </button>
+
+      </form>
+
+      <div class="login-secure">
+        <i class="ti ti-shield-check"></i>
+        Connexion sécurisée — données chiffrées
+      </div>
+
+      <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--bdr);text-align:center;">
+        <span style="font-size:12px;color:var(--gray);">Pas encore de compte ?</span>
+        <a href="{{ url_for('register') }}"
+           style="font-size:12px;font-weight:600;color:var(--indigo);margin-left:6px;transition:opacity .2s;"
+           onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+          <i class="ti ti-building-store" style="font-size:13px;"></i>
+          Créer mon compte entreprise
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function togglePassword() {
+    var input = document.getElementById('password');
+    var icon  = document.getElementById('eye-icon');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.className = 'ti ti-eye-off';
+    } else {
+      input.type = 'password';
+      icon.className = 'ti ti-eye';
+    }
+  }
+
+  // Animation d'entrée de la carte
+  document.addEventListener('DOMContentLoaded', function() {
+    var card = document.querySelector('.login-card');
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    setTimeout(function() {
+      card.style.transition = 'opacity .4s ease, transform .4s ease';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, 80);
+  });
+</script>
+
+</body>
+</html>

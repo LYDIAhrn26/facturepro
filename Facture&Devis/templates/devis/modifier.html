@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% block title %}Modifier {{ devis.numero_devis }} — FacturePro{% endblock %}
+{% block page_title %}Modifier le devis{% endblock %}
+
+{% block extra_css %}
+<style>
+  .devis-layout { display: grid; grid-template-columns: 1fr 320px; gap: 18px; align-items: start; }
+  .company-box {
+    background: linear-gradient(135deg, var(--indigo-bg), var(--violet-bg));
+    border: 1px solid rgba(99,102,241,.2); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;
+  }
+  .company-box-title { font-size: 9px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--indigo); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+  .company-info-row { display: flex; gap: 8px; font-size: 11px; color: var(--gray2); margin-bottom: 3px; }
+  .company-info-row strong { color: var(--dark); min-width: 65px; flex-shrink: 0; }
+  .lines-header { display: grid; grid-template-columns: 3fr 1.2fr .6fr 1fr 1fr 34px; gap: 6px; font-size: 9px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--gray); padding-bottom: 7px; border-bottom: 2px solid var(--indigo-bg); margin-bottom: 6px; }
+  .line-row { display: grid; grid-template-columns: 3fr 1.2fr .6fr 1fr 1fr 34px; gap: 6px; align-items: center; margin-bottom: 7px; animation: fadeIn .2s ease; }
+  .line-inp { background: #f8faff; border: 1.5px solid var(--bdr); border-radius: 6px; padding: 6px 8px; font-size: 11px; color: var(--dark); font-family: var(--fn); outline: none; width: 100%; transition: border-color .2s; }
+  .line-inp:focus { border-color: var(--indigo); background: #fff; }
+  .line-total { font-size: 11px; font-weight: 600; color: var(--indigo); font-family: var(--mono); text-align: right; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Modifier le devis</h1>
+    <div class="page-subtitle" style="display:flex;align-items:center;gap:8px;">
+      <span class="ref-tag">{{ devis.numero_devis }}</span>
+    </div>
+  </div>
+  <div class="page-header-right">
+    <a href="{{ url_for('voir_devis', id=devis.id) }}" class="btn btn-outline">
+      <i class="ti ti-arrow-left"></i> Annuler
+    </a>
+    <button type="submit" form="modifForm" class="btn btn-primary">
+      <i class="ti ti-device-floppy"></i> Enregistrer les modifications
+    </button>
+  </div>
+</div>
+
+<form method="POST" action="{{ url_for('modifier_devis', id=devis.id) }}" id="modifForm">
+
+<div class="devis-layout">
+
+  <!-- Colonne gauche -->
+  <div>
+
+    <!-- Infos entreprise -->
+    <div class="company-box">
+      <div class="company-box-title"><i class="ti ti-building-store"></i> Votre entreprise</div>
+      <div class="company-info-row"><strong>Nom</strong>{{ entreprise.nom or '—' }}</div>
+      <div class="company-info-row"><strong>SIRET</strong>{{ entreprise.siret or '—' }}</div>
+      <div class="company-info-row"><strong>Adresse</strong>{{ entreprise.adresse or '—' }}</div>
+    </div>
+
+    <!-- Client -->
+    <div class="form-panel">
+      <div class="form-section-title"><i class="ti ti-user"></i> Informations client</div>
+      <div class="form-grid">
+        {% set nom_parts = devis.client_nom.split(' ', 1) if devis.client_nom else ['',''] %}
+        <div class="form-group">
+          <label class="form-label">Nom *</label>
+          <input class="form-control" type="text" name="client_nom"
+                 value="{{ nom_parts[0] }}" required oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prénom / Société</label>
+          <input class="form-control" type="text" name="client_prenom"
+                 value="{{ nom_parts[1] if nom_parts|length > 1 else '' }}" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-control" type="email" name="client_email"
+                 value="{{ devis.client_email or '' }}" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Téléphone</label>
+          <input class="form-control" type="tel" name="client_tel"
+                 value="{{ devis.client_telephone or '' }}">
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Adresse</label>
+          <input class="form-control" type="text" name="client_adresse"
+                 value="{{ devis.client_adresse or '' }}" oninput="updatePreview()">
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Adresse du chantier</label>
+          <input class="form-control" type="text" name="adresse_presta"
+                 value="{{ devis.adresse_presta or '' }}">
+        </div>
+      </div>
+    </div>
+
+    <!-- Prestation -->
+    <div class="form-panel">
+      <div class="form-section-title"><i class="ti ti-briefcase"></i> Prestation</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Type de prestation</label>
+          <select class="form-control" name="type_service" onchange="updatePreview()">
+            <option value="">-- Choisir --</option>
+            {% for opt in ['Déménagement','Transport de marchandises','Livraison express',
+               'Maçonnerie & Gros œuvre','Plomberie & Sanitaire','Électricité',
+               'Menuiserie & Charpente','Peinture & Revêtements','Carrelage & Sol',
+               'Couverture & Toiture','Étanchéité','Isolation thermique',
+               'Chauffage & Climatisation','Ravalement de façade',
+               'Développement web & mobile','Maintenance informatique',
+               'Consulting & Conseil','Comptabilité & Finance','Formation professionnelle',
+               'Restauration & Traiteur','Organisation d\'événements',
+               'Nettoyage & Entretien','Jardinage & Paysage','Autre prestation'] %}
+            <option value="{{ opt }}" {% if devis.type_service == opt %}selected{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date du devis</label>
+          <input class="form-control" type="date" name="date_devis"
+                 value="{{ devis.date_devis.strftime('%Y-%m-%d') if devis.date_devis else '' }}"
+                 oninput="updatePreview()">
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Référence / Objet</label>
+          <input class="form-control" type="text" name="reference"
+                 value="{{ devis.description or '' }}" oninput="updatePreview()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Lignes -->
+    <div class="form-panel">
+      <div class="form-section-title"><i class="ti ti-list"></i> Lignes de prestation</div>
+      <div class="lines-header">
+        <span>Description</span><span>Unité</span><span style="text-align:center;">Qté</span>
+        <span style="text-align:right;">Prix HT</span><span style="text-align:right;">Total HT</span><span></span>
+      </div>
+      <div id="linesContainer"></div>
+      <div id="hiddenLines"></div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="addLine()" style="margin-top:6px;">
+        <i class="ti ti-plus"></i> Ajouter une ligne
+      </button>
+
+      <div class="total-box" style="margin-top:14px;">
+        <div class="total-row"><span>Sous-total HT</span><span id="outHT" style="font-family:var(--mono);">0,00 €</span></div>
+        <div class="total-row">
+          <span style="display:flex;align-items:center;gap:8px;">
+            TVA
+            <input type="number" name="tva" id="tvaInput" value="{{ devis.tva|int }}" min="0" max="100" step="0.5"
+                   style="width:62px;background:transparent;border:1.5px solid rgba(99,102,241,.3);border-radius:5px;padding:3px 6px;font-size:11px;color:var(--dark);font-family:var(--fn);text-align:center;"
+                   oninput="calcTotals()">
+            <span style="font-size:11px;color:var(--gray);">%</span>
+          </span>
+          <span id="outTVA" style="font-family:var(--mono);">0,00 €</span>
+        </div>
+        <div class="total-row total-final"><span>Total TTC</span><span id="outTTC">0,00 €</span></div>
+      </div>
+
+      <input type="hidden" name="montant_ht"  id="hiddenHT">
+      <input type="hidden" name="montant_ttc" id="hiddenTTC">
+
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label">Remarques</label>
+        <textarea class="form-control" name="remarques" rows="2">{{ devis.remarques or '' }}</textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Colonne droite : résumé -->
+  <div>
+    <div class="panel">
+      <div class="panel-title"><i class="ti ti-info-circle" style="color:var(--indigo);"></i> Résumé</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--gray);">Référence</span>
+          <span class="ref-tag">{{ devis.numero_devis }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--gray);">Client</span>
+          <span style="font-weight:500;color:var(--dark);" id="rClient">{{ devis.client_nom }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--gray);">Date</span>
+          <span id="rDate">{{ devis.date_devis.strftime('%d/%m/%Y') if devis.date_devis else '—' }}</span>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--bdr);">
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--gray);">Total HT</span>
+          <span id="rHT" style="font-family:var(--mono);">{{ "%.2f"|format(devis.montant_ht|float) }} €</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--gray);">TVA</span>
+          <span id="rTVA" style="font-family:var(--mono);">{{ "%.2f"|format(devis.montant_tva|float) }} €</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;">
+          <span style="color:var(--dark);">Total TTC</span>
+          <span id="rTTC" style="color:var(--indigo);font-family:var(--mono);">{{ "%.2f"|format(devis.montant_ttc|float) }} €</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:7px;">
+      <button type="submit" form="modifForm" class="btn btn-primary" style="width:100%;justify-content:center;">
+        <i class="ti ti-device-floppy"></i> Enregistrer les modifications
+      </button>
+      <a href="{{ url_for('voir_devis', id=devis.id) }}" class="btn btn-outline" style="width:100%;justify-content:center;">
+        <i class="ti ti-x"></i> Annuler
+      </a>
+    </div>
+  </div>
+
+</div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  var fmt = function(v) {
+    return parseFloat(v||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+  };
+
+  // Lignes existantes depuis la BDD
+  var lines = [
+    {% for ligne in devis.lignes %}
+    { id: {{ loop.index0 }}, desc: {{ ligne.description|tojson }}, unite: {{ (ligne.unite or 'Ens.')|tojson }}, qty: {{ ligne.quantite|float }}, pu: {{ ligne.prix_unitaire_ht|float }} },
+    {% endfor %}
+  ];
+  var lineId = lines.length;
+
+  function addLine() {
+    var id = lineId++;
+    lines.push({ id: id, desc: '', unite: 'Ens.', qty: 1, pu: 0 });
+    renderLines();
+  }
+
+  function removeLine(id) {
+    lines = lines.filter(function(l) { return l.id !== id; });
+    renderLines(); calcTotals();
+  }
+
+  function renderLines() {
+    var container = document.getElementById('linesContainer');
+    container.innerHTML = '';
+    lines.forEach(function(l) {
+      var row = document.createElement('div');
+      row.className = 'line-row';
+      row.innerHTML =
+        '<input class="line-inp" placeholder="Description..." value="'+(l.desc||'')+'"'+
+          ' oninput="updateField('+l.id+',\'desc\',this.value)">'+
+        '<input class="line-inp" placeholder="Ens./M²/ML..." value="'+(l.unite||'Ens.')+'"'+
+          ' style="text-align:center;" oninput="updateField('+l.id+',\'unite\',this.value)">'+
+        '<input class="line-inp" type="number" min="0" step="0.01" value="'+l.qty+'"'+
+          ' style="text-align:center;" oninput="updateField('+l.id+',\'qty\',parseFloat(this.value)||0)">'+
+        '<input class="line-inp" type="number" min="0" step="0.01" value="'+(l.pu||'')+'"'+
+          ' placeholder="0,00" style="text-align:right;" oninput="updateField('+l.id+',\'pu\',parseFloat(this.value)||0)">'+
+        '<div class="line-total" id="lt-'+l.id+'">'+fmt(l.qty*l.pu)+'</div>'+
+        '<button type="button" class="btn btn-danger btn-sm" onclick="removeLine('+l.id+')" style="padding:4px 7px;">'+
+          '<i class="ti ti-trash"></i></button>';
+      container.appendChild(row);
+    });
+    calcTotals();
+  }
+
+  function updateField(id, field, val) {
+    var l = lines.find(function(x){return x.id===id;});
+    if (!l) return;
+    l[field] = val;
+    var tot = document.getElementById('lt-'+id);
+    if (tot) tot.textContent = fmt(l.qty*l.pu);
+    calcTotals();
+  }
+
+  function calcTotals() {
+    updateHiddenLines();
+    var ht     = lines.reduce(function(s,l){return s+(l.qty*l.pu);},0);
+    var tva    = parseFloat(document.getElementById('tvaInput').value)||0;
+    var tvaAmt = ht*tva/100;
+    var ttc    = ht+tvaAmt;
+
+    document.getElementById('outHT').textContent  = fmt(ht);
+    document.getElementById('outTVA').textContent = fmt(tvaAmt);
+    document.getElementById('outTTC').textContent = fmt(ttc);
+    document.getElementById('hiddenHT').value     = ht.toFixed(2);
+    document.getElementById('hiddenTTC').value    = ttc.toFixed(2);
+    document.getElementById('rHT').textContent    = fmt(ht);
+    document.getElementById('rTVA').textContent   = fmt(tvaAmt);
+    document.getElementById('rTTC').textContent   = fmt(ttc);
+
+    lines.forEach(function(l){var el=document.getElementById('lt-'+l.id);if(el)el.textContent=fmt(l.qty*l.pu);});
+  }
+
+  function updateHiddenLines() {
+    var div = document.getElementById('hiddenLines');
+    div.innerHTML = '';
+    lines.forEach(function(l) {
+      div.innerHTML +=
+        '<input type="hidden" name="ligne_desc[]" value="'+(l.desc||'')+'">'+
+        '<input type="hidden" name="ligne_type[]" value="'+(l.unite||'')+'">'+
+        '<input type="hidden" name="ligne_qty[]"  value="'+l.qty+'">'+
+        '<input type="hidden" name="ligne_pu[]"   value="'+l.pu+'">';
+    });
+  }
+
+  function updatePreview() {
+    var nom  = document.querySelector('[name="client_nom"]').value;
+    var pre  = document.querySelector('[name="client_prenom"]').value;
+    var dt   = document.querySelector('[name="date_devis"]').value;
+    document.getElementById('rClient').textContent = (nom+' '+pre).trim() || '—';
+    document.getElementById('rDate').textContent   = dt
+      ? new Date(dt+'T00:00:00').toLocaleDateString('fr-FR') : '—';
+  }
+
+  // Init avec les lignes existantes
+  if (lines.length === 0) addLine();
+  else renderLines();
+  calcTotals();
+</script>
+{% endblock %}

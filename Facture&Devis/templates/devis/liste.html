@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% block title %}Mes devis — FacturePro{% endblock %}
+{% block page_title %}Mes devis{% endblock %}
+
+{% block extra_css %}
+<style>
+  .action-btns { display: flex; gap: 5px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+  .stats-bar {
+    display: flex; gap: 0; flex-wrap: wrap;
+    background: var(--surf); border: 1px solid var(--bdr);
+    border-radius: 12px; margin-bottom: 16px;
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .stats-bar-item {
+    flex: 1; min-width: 120px; padding: 14px 20px;
+    border-right: 1px solid var(--bdr);
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .stats-bar-item:last-child { border-right: none; }
+  .stats-bar-label { font-size: 9px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--gray); }
+  .stats-bar-val   { font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--dark); }
+  .stats-bar-val.indigo { color: var(--indigo); }
+
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(30,27,75,.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999; opacity: 0; pointer-events: none;
+    transition: opacity .25s ease;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-box {
+    background: var(--surf); border: 1px solid var(--bdr);
+    border-radius: 16px; padding: 28px 28px 24px;
+    width: 420px; max-width: 94vw;
+    transform: translateY(16px) scale(.97);
+    transition: transform .25s ease;
+    box-shadow: var(--shadow-lg);
+  }
+  .modal-overlay.open .modal-box { transform: translateY(0) scale(1); }
+  .modal-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 16px; }
+  .modal-title { font-size: 16px; font-weight: 600; color: var(--dark); margin-bottom: 6px; }
+  .modal-desc  { font-size: 12px; color: var(--gray); line-height: 1.6; margin-bottom: 20px; }
+  .modal-ref   { font-family: var(--mono); color: var(--indigo); font-weight: 600; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--gray);
+  }
+  .empty-state i { font-size: 48px; color: var(--bdr2); margin-bottom: 14px; display: block; }
+  .empty-state p { font-size: 13px; margin-bottom: 16px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Mes devis
+      <span style="font-size:14px;font-weight:400;color:var(--gray);font-family:var(--mono);">
+        ({{ devis|length }} au total)
+      </span>
+    </h1>
+    <div class="page-subtitle">Tous vos devis FacturePro</div>
+  </div>
+  <div class="page-header-right">
+    <a href="{{ url_for('nouveau_devis') }}" class="btn btn-primary">
+      <i class="ti ti-plus"></i> Nouveau devis
+    </a>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-bar">
+  <div class="stats-bar-item">
+    <div class="stats-bar-label">Total devis</div>
+    <div class="stats-bar-val">{{ devis|length }}</div>
+  </div>
+  <div class="stats-bar-item">
+    <div class="stats-bar-label">Total HT</div>
+    <div class="stats-bar-val">
+      {{ "%.2f"|format(devis|sum(attribute='montant_ht')|float) }} €
+    </div>
+  </div>
+  <div class="stats-bar-item">
+    <div class="stats-bar-label">Total TTC</div>
+    <div class="stats-bar-val indigo">
+      {{ "%.2f"|format(devis|sum(attribute='montant_ttc')|float) }} €
+    </div>
+  </div>
+</div>
+
+<!-- Recherche -->
+<div class="search-bar" style="margin-bottom:14px;">
+  <div class="search-wrap">
+    <i class="ti ti-search"></i>
+    <input class="search-input" type="text" id="searchInput"
+           placeholder="Rechercher par client, référence..."
+           oninput="filterTable()">
+  </div>
+  <select class="btn btn-outline" id="filterType" onchange="filterTable()"
+          style="padding:8px 14px;font-size:12px;">
+    <option value="">Tous les types</option>
+    <option value="Déménagement">Déménagement</option>
+    <option value="Livraison">Livraison</option>
+    <option value="Transport">Transport</option>
+  </select>
+</div>
+
+<!-- Tableau -->
+{% if devis %}
+<div class="panel" style="padding:0; overflow:hidden;">
+  <div class="table-wrapper">
+    <table class="table" id="devisTable">
+      <thead>
+        <tr>
+          <th>Référence</th>
+          <th>Client</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th style="text-align:right;">Montant HT</th>
+          <th style="text-align:right;">Montant TTC</th>
+          <th style="text-align:right;">Date</th>
+          <th style="text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="devisBody">
+        {% for d in devis %}
+        <tr data-type="{{ d.type_service or '' }}">
+          <td class="td-ref">{{ d.numero_devis }}</td>
+          <td class="td-bold">{{ d.client_nom or '—' }}</td>
+          <td>
+            {% if d.type_service %}
+            <span class="badge badge-indigo">{{ d.type_service }}</span>
+            {% else %}—{% endif %}
+          </td>
+          <td style="color:var(--gray);max-width:180px;font-size:11px;">
+            {{ (d.description or '')[:60] }}{% if d.description and d.description|length > 60 %}...{% endif %}
+          </td>
+          <td class="td-mono" style="text-align:right;">{{ "%.2f"|format(d.montant_ht|float) }} €</td>
+          <td class="td-mono" style="text-align:right;">{{ "%.2f"|format(d.montant_ttc|float) }} €</td>
+          <td style="text-align:right;color:var(--gray);">
+            {{ d.date_devis.strftime('%d/%m/%Y') if d.date_devis else '—' }}
+          </td>
+          <td>
+            <div class="action-btns">
+              <a href="{{ url_for('voir_devis', id=d.id) }}" class="btn btn-ghost btn-sm" title="Voir"><i class="ti ti-eye"></i></a>
+              <a href="{{ url_for('pdf_devis', id=d.id) }}" class="btn btn-ghost btn-sm" title="Télécharger PDF" target="_blank"><i class="ti ti-download"></i></a>
+              <a href="{{ url_for('modifier_devis', id=d.id) }}" class="btn btn-ghost btn-sm" title="Modifier"><i class="ti ti-edit"></i></a>
+              <button class="btn btn-violet btn-sm"
+                onclick="openConvert('{{ d.numero_devis }}', '{{ d.client_nom or '' }}', '{{ '%.2f'|format(d.montant_ttc|float) }} €')">
+                <i class="ti ti-arrows-exchange"></i> Convertir
+              </button>
+              <a href="{{ url_for('supprimer_devis', id=d.id) }}"
+                 class="btn btn-outline btn-sm"
+                 onclick="return confirm('Supprimer le devis {{ d.numero_devis }} ?')">
+                <i class="ti ti-trash"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-top:1px solid var(--bdr);background:#fafbff;border-radius:0 0 14px 14px;flex-wrap:wrap;gap:8px;">
+    <div style="font-size:11px;color:var(--gray);">
+      <span id="rowCount">{{ devis|length }}</span> devis affichés
+    </div>
+    <div style="font-size:11px;color:var(--gray);">
+      Total TTC :
+      <strong style="color:var(--indigo);font-family:var(--mono);">
+        {{ "%.2f"|format(devis|sum(attribute='montant_ttc')|float) }} €
+      </strong>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<!-- État vide -->
+<div class="panel">
+  <div class="empty-state">
+    <i class="ti ti-file-off"></i>
+    <p>Aucun devis créé pour le moment.</p>
+    <a href="{{ url_for('nouveau_devis') }}" class="btn btn-primary">
+      <i class="ti ti-plus"></i> Créer mon premier devis
+    </a>
+  </div>
+</div>
+{% endif %}
+
+<!-- Modal Convertir -->
+<div class="modal-overlay" id="modalConvert">
+  <div class="modal-box">
+    <div class="modal-icon" style="background:var(--violet-bg);color:var(--violet);">
+      <i class="ti ti-arrows-exchange"></i>
+    </div>
+    <div class="modal-title">Convertir en facture</div>
+    <div class="modal-desc">
+      Le devis <span class="modal-ref" id="modalRef"></span>
+      de <strong id="modalClient"></strong>
+      (<span id="modalMontant"></span> TTC)
+      sera converti en facture.
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modalConvert')">
+        <i class="ti ti-x"></i> Annuler
+      </button>
+      <a href="{{ url_for('nouvelle_facture') }}" class="btn btn-primary">
+        <i class="ti ti-check"></i> Créer la facture
+      </a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function filterTable() {
+    var search = document.getElementById('searchInput').value.toLowerCase();
+    var type   = document.getElementById('filterType').value;
+    var rows   = document.querySelectorAll('#devisBody tr');
+    var count  = 0;
+    rows.forEach(function(row) {
+      var text  = row.textContent.toLowerCase();
+      var rType = row.getAttribute('data-type') || '';
+      var show  = true;
+      if (search && !text.includes(search)) show = false;
+      if (type   && rType !== type)         show = false;
+      row.style.display = show ? '' : 'none';
+      if (show) count++;
+    });
+    document.getElementById('rowCount').textContent = count;
+  }
+
+  function openConvert(ref, client, montant) {
+    document.getElementById('modalRef').textContent     = ref;
+    document.getElementById('modalClient').textContent  = client;
+    document.getElementById('modalMontant').textContent = montant;
+    document.getElementById('modalConvert').classList.add('open');
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  document.querySelectorAll('.modal-overlay').forEach(function(o) {
+    o.addEventListener('click', function(e) {
+      if (e.target === o) o.classList.remove('open');
+    });
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay.open').forEach(function(m) {
+        m.classList.remove('open');
+      });
+    }
+  });
+</script>
+{% endblock %}

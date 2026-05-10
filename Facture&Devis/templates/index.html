@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FacturePro — Créez vos devis et factures en ligne</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --indigo:#6366f1;--indigo2:#4f46e5;--indigo3:#3730a3;
+      --violet:#8b5cf6;--teal:#0d9488;--orange:#f59e0b;
+      --green:#10b981;--dark:#1e1b4b;--gray:#6b7280;
+      --bg:#f0f4ff;--surf:#fff;--bdr:#e2e8f8;
+      --fn:'Sora',sans-serif;--mono:'IBM Plex Mono',monospace;
+    }
+    html{scroll-behavior:smooth;}
+    body{font-family:var(--fn);background:var(--surf);color:var(--dark);overflow-x:hidden;}
+    a{text-decoration:none;color:inherit;}
+
+    /* NAVBAR */
+    .navbar{
+      position:fixed;top:0;left:0;right:0;z-index:100;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 60px;
+      background:rgba(255,255,255,.95);
+      backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--bdr);
+      transition:box-shadow .3s;
+    }
+    .navbar-logo{display:flex;align-items:center;gap:10px;}
+    .navbar-logo-icon{
+      width:38px;height:38px;border-radius:10px;
+      background:linear-gradient(135deg,var(--indigo),var(--violet));
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;color:#fff;
+    }
+    .navbar-logo-name{font-size:17px;font-weight:700;color:var(--dark);}
+    .navbar-links{display:flex;align-items:center;gap:30px;}
+    .navbar-link{font-size:13px;color:var(--gray);font-weight:500;transition:color .2s;}
+    .navbar-link:hover{color:var(--indigo);}
+    .navbar-actions{display:flex;align-items:center;gap:10px;}
+    .btn-nav-login{
+      padding:8px 20px;border-radius:8px;font-size:13px;font-weight:500;
+      border:1.5px solid var(--bdr);color:var(--dark);background:transparent;
+      cursor:pointer;font-family:var(--fn);transition:all .2s;
+      display:inline-flex;align-items:center;gap:6px;
+    }
+    .btn-nav-login:hover{border-color:var(--indigo);color:var(--indigo);}
+    .btn-nav-register{
+      padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;
+      background:linear-gradient(135deg,var(--indigo),var(--violet));
+      color:#fff;border:none;cursor:pointer;font-family:var(--fn);
+      box-shadow:0 2px 10px rgba(99,102,241,.3);transition:all .2s;
+      display:inline-flex;align-items:center;gap:6px;
+    }
+    .btn-nav-register:hover{box-shadow:0 4px 18px rgba(99,102,241,.4);transform:translateY(-1px);}
+
+    /* HERO */
+    .hero{
+      min-height:100vh;
+      background:linear-gradient(140deg,#1e1b4b 0%,#3730a3 40%,#4f46e5 70%,#6366f1 100%);
+      display:flex;align-items:center;justify-content:center;
+      text-align:center;padding:130px 20px 90px;
+      position:relative;overflow:hidden;
+    }
+    .hero-blob1{position:absolute;width:600px;height:600px;border-radius:50%;background:rgba(139,92,246,.12);top:-150px;right:-150px;pointer-events:none;}
+    .hero-blob2{position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(16,185,129,.08);bottom:-80px;left:-80px;pointer-events:none;}
+    .hero-content{position:relative;z-index:1;max-width:820px;}
+    .hero-badge{
+      display:inline-flex;align-items:center;gap:7px;
+      background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+      border-radius:99px;padding:7px 18px;
+      font-size:12px;color:rgba(255,255,255,.9);margin-bottom:28px;
+    }
+    .hero-badge i{color:#fbbf24;}
+    .hero-title{font-size:62px;font-weight:700;color:#fff;line-height:1.12;margin-bottom:22px;}
+    .hero-title-accent{background:linear-gradient(90deg,#fbbf24,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .hero-subtitle{font-size:18px;color:rgba(255,255,255,.72);line-height:1.75;margin-bottom:44px;max-width:640px;margin-left:auto;margin-right:auto;}
+    .hero-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+    .btn-hero-white{
+      padding:15px 34px;border-radius:11px;font-size:15px;font-weight:700;
+      background:#fff;color:var(--indigo2);border:none;cursor:pointer;
+      font-family:var(--fn);box-shadow:0 4px 24px rgba(0,0,0,.18);
+      transition:all .2s;display:inline-flex;align-items:center;gap:9px;
+    }
+    .btn-hero-white:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.22);}
+    .btn-hero-ghost{
+      padding:15px 34px;border-radius:11px;font-size:15px;font-weight:600;
+      background:transparent;color:#fff;border:2px solid rgba(255,255,255,.35);
+      cursor:pointer;font-family:var(--fn);transition:all .2s;
+      display:inline-flex;align-items:center;gap:9px;
+    }
+    .btn-hero-ghost:hover{border-color:#fff;background:rgba(255,255,255,.08);}
+    .hero-stats{
+      display:flex;gap:50px;justify-content:center;flex-wrap:wrap;
+      margin-top:70px;padding-top:44px;border-top:1px solid rgba(255,255,255,.12);
+    }
+    .hero-stat-val{font-size:36px;font-weight:700;color:#fff;font-family:var(--mono);}
+    .hero-stat-lbl{font-size:12px;color:rgba(255,255,255,.55);margin-top:5px;}
+
+    /* SECTIONS */
+    section{padding:90px 80px;}
+    .section-center{text-align:center;max-width:640px;margin:0 auto 50px;}
+    .section-badge{
+      display:inline-flex;align-items:center;gap:6px;
+      background:var(--bg);border:1px solid var(--bdr);
+      border-radius:99px;padding:5px 15px;
+      font-size:11px;font-weight:600;color:var(--indigo);
+      text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;
+    }
+    .section-title{font-size:42px;font-weight:700;color:var(--dark);line-height:1.2;margin-bottom:12px;}
+    .section-title span{color:var(--indigo);}
+    .section-sub{font-size:16px;color:var(--gray);line-height:1.7;}
+
+    /* FEATURES */
+    .features-bg{background:var(--bg);}
+    .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+    .feature-card{
+      background:var(--surf);border:1px solid var(--bdr);
+      border-radius:16px;padding:28px 26px;
+      box-shadow:0 2px 14px rgba(99,102,241,.05);
+      transition:transform .2s,box-shadow .2s;
+    }
+    .feature-card:hover{transform:translateY(-4px);box-shadow:0 10px 32px rgba(99,102,241,.12);}
+    .feature-icon{width:50px;height:50px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:18px;}
+    .feature-title{font-size:16px;font-weight:600;color:var(--dark);margin-bottom:9px;}
+    .feature-desc{font-size:13px;color:var(--gray);line-height:1.65;}
+
+    /* SECTEURS */
+    .secteurs-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+    .secteur-card{
+      background:var(--surf);border:1px solid var(--bdr);
+      border-radius:12px;padding:18px 14px;text-align:center;
+      transition:all .2s;
+    }
+    .secteur-card:hover{border-color:var(--indigo);background:var(--bg);transform:translateY(-2px);}
+    .secteur-icon{font-size:30px;margin-bottom:9px;display:block;}
+    .secteur-name{font-size:12px;font-weight:600;color:var(--dark);}
+
+    /* COMMENT CA MARCHE */
+    .how-bg{background:var(--bg);}
+    .steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;position:relative;}
+    .steps-grid::before{content:'';position:absolute;top:36px;left:13%;right:13%;height:2px;background:linear-gradient(90deg,var(--indigo),var(--violet));z-index:0;}
+    .step-card{text-align:center;position:relative;z-index:1;}
+    .step-num{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--indigo),var(--violet));display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;margin:0 auto 18px;box-shadow:0 4px 20px rgba(99,102,241,.35);}
+    .step-title{font-size:15px;font-weight:600;color:var(--dark);margin-bottom:8px;}
+    .step-desc{font-size:13px;color:var(--gray);line-height:1.6;}
+
+    /* TEMOIGNAGES */
+    .temoignages-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+    .temoignage-card{background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:26px;box-shadow:0 2px 12px rgba(99,102,241,.05);}
+    .stars{color:#fbbf24;font-size:15px;margin-bottom:12px;letter-spacing:2px;}
+    .temoignage-text{font-size:13px;color:var(--gray);line-height:1.75;margin-bottom:18px;font-style:italic;}
+    .temoignage-author{display:flex;align-items:center;gap:11px;}
+    .t-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
+    .t-name{font-size:13px;font-weight:600;color:var(--dark);}
+    .t-job{font-size:11px;color:var(--gray);}
+
+    /* CTA */
+    .cta-section{background:linear-gradient(135deg,var(--indigo),var(--violet));text-align:center;padding:100px 60px;}
+    .cta-title{font-size:46px;font-weight:700;color:#fff;margin-bottom:16px;line-height:1.2;}
+    .cta-sub{font-size:17px;color:rgba(255,255,255,.75);margin-bottom:40px;line-height:1.7;}
+
+    /* FOOTER */
+    .footer{background:#0f0e1a;padding:56px 80px 30px;}
+    .footer-grid{display:grid;grid-template-columns:2.5fr 1fr 1fr 1fr;gap:48px;margin-bottom:44px;}
+    .footer-logo{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+    .footer-logo-icon{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--indigo),var(--violet));display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;}
+    .footer-logo-name{font-size:16px;font-weight:700;color:#fff;}
+    .footer-brand-desc{font-size:12px;color:rgba(255,255,255,.45);line-height:1.75;}
+    .footer-col-title{font-size:11px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;}
+    .footer-link{font-size:12px;color:rgba(255,255,255,.45);display:block;margin-bottom:10px;transition:color .2s;}
+    .footer-link:hover{color:#fff;}
+    .footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:26px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.35);}
+
+    @media(max-width:1024px){
+      .navbar{padding:12px 24px;}
+      .navbar-links{display:none;}
+      section{padding:70px 24px;}
+      .hero-title{font-size:38px;}
+      .features-grid,.temoignages-grid,.steps-grid{grid-template-columns:1fr 1fr;}
+      .secteurs-grid{grid-template-columns:repeat(3,1fr);}
+      .steps-grid::before{display:none;}
+      .footer-grid{grid-template-columns:1fr 1fr;}
+      .footer{padding:40px 24px 24px;}
+    }
+    @media(max-width:640px){
+      .hero-title{font-size:28px;}
+      .features-grid,.temoignages-grid,.steps-grid{grid-template-columns:1fr;}
+      .secteurs-grid{grid-template-columns:repeat(2,1fr);}
+      .hero-stats{gap:24px;}
+      .section-title{font-size:28px;}
+      .cta-title{font-size:28px;}
+      .footer-grid{grid-template-columns:1fr;}
+      .footer-bottom{flex-direction:column;gap:10px;text-align:center;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-logo">
+    <div class="navbar-logo-icon"><i class="ti ti-receipt-2"></i></div>
+    <div class="navbar-logo-name">FacturePro</div>
+  </div>
+  <div class="navbar-links">
+    <a href="#features"    class="navbar-link">Fonctionnalités</a>
+    <a href="#secteurs"    class="navbar-link">Secteurs</a>
+    <a href="#comment"     class="navbar-link">Comment ça marche</a>
+    <a href="#temoignages" class="navbar-link">Témoignages</a>
+  </div>
+  <div class="navbar-actions">
+    <a href="{{ url_for('login') }}" class="btn-nav-login">
+      <i class="ti ti-login"></i> Se connecter
+    </a>
+    <a href="{{ url_for('register') }}" class="btn-nav-register">
+      <i class="ti ti-rocket"></i> Commencer gratuitement
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-blob1"></div>
+  <div class="hero-blob2"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <i class="ti ti-star-filled"></i>
+      Utilisé par +2 000 entreprises et professionnels indépendants
+    </div>
+    <h1 class="hero-title">
+      Vos devis et factures<br>
+      <span class="hero-title-accent">professionnels en 2 minutes</span>
+    </h1>
+    <p class="hero-subtitle">
+      FacturePro simplifie votre facturation au quotidien. Créez, envoyez et suivez
+      vos devis et factures depuis n'importe quel appareil. Pour toutes les entreprises,
+      tous les secteurs, tous les professionnels.
+    </p>
+    <div class="hero-actions">
+      <a href="{{ url_for('register') }}" class="btn-hero-white">
+        <i class="ti ti-rocket"></i> Créer mon compte gratuit
+      </a>
+      <a href="#comment" class="btn-hero-ghost">
+        <i class="ti ti-play"></i> Voir comment ça marche
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div><div class="hero-stat-val">2 000+</div><div class="hero-stat-lbl">Entreprises inscrites</div></div>
+      <div><div class="hero-stat-val">50k+</div><div class="hero-stat-lbl">Documents créés</div></div>
+      <div><div class="hero-stat-val">98%</div><div class="hero-stat-lbl">Clients satisfaits</div></div>
+      <div><div class="hero-stat-val">Gratuit</div><div class="hero-stat-lbl">Pour démarrer</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" class="features-bg">
+  <div class="section-center">
+    <div class="section-badge"><i class="ti ti-sparkles"></i> Fonctionnalités</div>
+    <div class="section-title">Tout ce qu'il vous faut<br><span>pour facturer comme un pro</span></div>
+    <div class="section-sub">Conçu pour être simple dès le premier jour, puissant au fil du temps.</div>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#eef2ff;color:#6366f1;"><i class="ti ti-file-text"></i></div>
+      <div class="feature-title">Devis professionnels</div>
+      <div class="feature-desc">Créez des devis complets en quelques minutes avec vos coordonnées, logo et conditions de paiement. Export PDF automatique.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#f0fdf4;color:#10b981;"><i class="ti ti-receipt-2"></i></div>
+      <div class="feature-title">Factures avec suivi</div>
+      <div class="feature-desc">Numérotation automatique, suivi des paiements en temps réel. Badge orange (en attente) → vert (payée) en un clic.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#fff7ed;color:#f59e0b;"><i class="ti ti-arrows-exchange"></i></div>
+      <div class="feature-title">Conversion en 1 clic</div>
+      <div class="feature-desc">Transformez un devis accepté en facture instantanément. Toutes les informations sont reprises automatiquement.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#f5f3ff;color:#8b5cf6;"><i class="ti ti-users"></i></div>
+      <div class="feature-title">Base clients centralisée</div>
+      <div class="feature-desc">Gérez votre carnet d'adresses. Retrouvez l'historique complet de chaque client, ses devis et ses factures.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#f0fdfa;color:#0d9488;"><i class="ti ti-chart-bar"></i></div>
+      <div class="feature-title">Tableau de bord analytics</div>
+      <div class="feature-desc">Visualisez votre chiffre d'affaires, taux de paiement et progression. Graphiques clairs et interactifs.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#fef2f2;color:#ef4444;"><i class="ti ti-mail"></i></div>
+      <div class="feature-title">Envoi direct par email</div>
+      <div class="feature-desc">Envoyez vos documents directement via Gmail. Vos clients reçoivent un email professionnel avec le PDF joint.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTEURS -->
+<section id="secteurs">
+  <div class="section-center">
+    <div class="section-badge"><i class="ti ti-building"></i> Secteurs</div>
+    <div class="section-title">Pour <span>tous les métiers</span></div>
+    <div class="section-sub">Artisan, PME, freelance, professionnel de santé, restaurateur — FacturePro s'adapte à votre secteur.</div>
+  </div>
+  <div class="secteurs-grid">
+    <div class="secteur-card"><span class="secteur-icon">🚛</span><div class="secteur-name">Transport & Déménagement</div></div>
+    <div class="secteur-card"><span class="secteur-icon">🔨</span><div class="secteur-name">BTP & Artisanat</div></div>
+    <div class="secteur-card"><span class="secteur-icon">💻</span><div class="secteur-name">Informatique & Tech</div></div>
+    <div class="secteur-card"><span class="secteur-icon">🏥</span><div class="secteur-name">Santé & Médical</div></div>
+    <div class="secteur-card"><span class="secteur-icon">⚖️</span><div class="secteur-name">Juridique & Conseil</div></div>
+    <div class="secteur-card"><span class="secteur-icon">🍽️</span><div class="secteur-name">Restauration & Traiteur</div></div>
+    <div class="secteur-card"><span class="secteur-icon">🎨</span><div class="secteur-name">Design & Création</div></div>
+    <div class="secteur-card"><span class="secteur-icon">🏠</span><div class="secteur-name">Immobilier & Gestion</div></div>
+    <div class="secteur-card"><span class="secteur-icon">📚</span><div class="secteur-name">Formation & Éducation</div></div>
+    <div class="secteur-card"><span class="secteur-icon">🌿</span><div class="secteur-name">Agriculture & Paysage</div></div>
+    <div class="secteur-card"><span class="secteur-icon">💆</span><div class="secteur-name">Bien-être & Beauté</div></div>
+    <div class="secteur-card"><span class="secteur-icon">🔧</span><div class="secteur-name">Maintenance & Réparation</div></div>
+    <div class="secteur-card"><span class="secteur-icon">📸</span><div class="secteur-name">Photographie & Vidéo</div></div>
+    <div class="secteur-card"><span class="secteur-icon">🚗</span><div class="secteur-name">Auto & Mécanique</div></div>
+    <div class="secteur-card"><span class="secteur-icon">⚡</span><div class="secteur-name">Électricité & Énergie</div></div>
+    <div class="secteur-card"><span class="secteur-icon">🧹</span><div class="secteur-name">Nettoyage & Entretien</div></div>
+    <div class="secteur-card"><span class="secteur-icon">🎭</span><div class="secteur-name">Événementiel & Culture</div></div>
+    <div class="secteur-card"><span class="secteur-icon">🛒</span><div class="secteur-name">Commerce & Vente</div></div>
+    <div class="secteur-card"><span class="secteur-icon">👗</span><div class="secteur-name">Mode & Textile</div></div>
+    <div class="secteur-card"><span class="secteur-icon">🌍</span><div class="secteur-name">Tout autre secteur</div></div>
+  </div>
+</section>
+
+<!-- COMMENT CA MARCHE -->
+<section id="comment" class="how-bg">
+  <div class="section-center">
+    <div class="section-badge"><i class="ti ti-list-numbers"></i> Simple et rapide</div>
+    <div class="section-title">Prêt en <span>moins de 5 minutes</span></div>
+    <div class="section-sub">Aucune installation. Aucune formation. Commencez tout de suite.</div>
+  </div>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num"><i class="ti ti-building-store"></i></div>
+      <div class="step-title">1. Créez votre compte</div>
+      <div class="step-desc">Renseignez les coordonnées de votre entreprise : SIRET, adresse, IBAN, logo. Fait une fois, affiché partout.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num"><i class="ti ti-file-text"></i></div>
+      <div class="step-title">2. Rédigez un devis</div>
+      <div class="step-desc">Remplissez les informations client et les lignes de prestation. Le total HT, TVA et TTC se calculent seuls.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num"><i class="ti ti-send"></i></div>
+      <div class="step-title">3. Envoyez au client</div>
+      <div class="step-desc">Téléchargez en PDF ou envoyez par Gmail. Le client signe et vous retourne le document.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num"><i class="ti ti-currency-euro"></i></div>
+      <div class="step-title">4. Encaissez et suivez</div>
+      <div class="step-desc">Convertissez en facture, marquez comme payée, visualisez votre CA en temps réel.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TEMOIGNAGES -->
+<section id="temoignages">
+  <div class="section-center">
+    <div class="section-badge"><i class="ti ti-message-circle"></i> Ils nous font confiance</div>
+    <div class="section-title">Ce que disent <span>nos utilisateurs</span></div>
+  </div>
+  <div class="temoignages-grid">
+    <div class="temoignage-card">
+      <div class="stars">★★★★★</div>
+      <div class="temoignage-text">« En tant qu'électricien indépendant, je perdais des heures à faire ma paperasse. Avec FacturePro, un devis prend 3 minutes. Mes clients reçoivent un document vraiment professionnel. »</div>
+      <div class="temoignage-author">
+        <div class="t-avatar" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">KM</div>
+        <div><div class="t-name">Karim M.</div><div class="t-job">Électricien indépendant</div></div>
+      </div>
+    </div>
+    <div class="temoignage-card">
+      <div class="stars">★★★★★</div>
+      <div class="temoignage-text">« Je gère une société de nettoyage. Le suivi des factures payées/en attente m'a changé la vie. Je sais exactement ce que mes clients me doivent, en un regard. »</div>
+      <div class="temoignage-author">
+        <div class="t-avatar" style="background:linear-gradient(135deg,#0d9488,#06b6d4);">SB</div>
+        <div><div class="t-name">Sophie B.</div><div class="t-job">Gérante société de nettoyage</div></div>
+      </div>
+    </div>
+    <div class="temoignage-card">
+      <div class="stars">★★★★★</div>
+      <div class="temoignage-text">« Pour mon entreprise de déménagement, les devis et factures sont impeccables. Les clients apprécient la clarté des documents. Je recommande à tous les artisans et PME. »</div>
+      <div class="temoignage-author">
+        <div class="t-avatar" style="background:linear-gradient(135deg,#f59e0b,#f97316);">FL</div>
+        <div><div class="t-name">Thomas D.</div><div class="t-job">Gérant PME BTP</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-section">
+  <div class="cta-title">Prêt à professionnaliser<br>votre facturation ?</div>
+  <div class="cta-sub">Rejoignez des milliers d'entreprises et de professionnels indépendants.<br>Inscription gratuite — aucune carte bancaire requise.</div>
+  <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+    <a href="{{ url_for('register') }}" class="btn-hero-white">
+      <i class="ti ti-rocket"></i> Créer mon compte gratuitement
+    </a>
+    <a href="{{ url_for('login') }}" class="btn-hero-ghost">
+      <i class="ti ti-login"></i> Se connecter
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div>
+      <div class="footer-logo">
+        <div class="footer-logo-icon"><i class="ti ti-receipt-2"></i></div>
+        <div class="footer-logo-name">FacturePro</div>
+      </div>
+      <div class="footer-brand-desc">La solution de facturation simple, rapide et professionnelle pour toutes les entreprises, artisans et professionnels indépendants.</div>
+    </div>
+    <div>
+      <div class="footer-col-title">Produit</div>
+      <a href="#features"    class="footer-link">Fonctionnalités</a>
+      <a href="#comment"     class="footer-link">Comment ça marche</a>
+      <a href="#temoignages" class="footer-link">Témoignages</a>
+    </div>
+    <div>
+      <div class="footer-col-title">Secteurs</div>
+      <a href="#secteurs" class="footer-link">BTP & Artisanat</a>
+      <a href="#secteurs" class="footer-link">Transport</a>
+      <a href="#secteurs" class="footer-link">Informatique</a>
+      <a href="#secteurs" class="footer-link">Tous les secteurs</a>
+    </div>
+    <div>
+      <div class="footer-col-title">Compte</div>
+      <a href="{{ url_for('register') }}" class="footer-link">S'inscrire gratuitement</a>
+      <a href="{{ url_for('login') }}"    class="footer-link">Se connecter</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div>© 2026 FacturePro — Tous droits réservés</div>
+    <div>Conçu pour les professionnels de tous secteurs</div>
+  </div>
+</footer>
+
+<script>
+  window.addEventListener('scroll', function() {
+    var nav = document.getElementById('navbar');
+    nav.style.boxShadow = window.scrollY > 20 ? '0 4px 24px rgba(30,27,75,.1)' : 'none';
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,473 @@
+{% extends "base.html" %}
+{% block title %}Clients — FacturePro{% endblock %}
+{% block page_title %}Gestion des clients{% endblock %}
+
+{% block extra_css %}
+<style>
+  .stats-bar {
+    display: flex; gap: 0; flex-wrap: wrap;
+    background: var(--surf); border: 1px solid var(--bdr);
+    border-radius: 12px; margin-bottom: 16px;
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .stats-bar-item {
+    flex: 1; min-width: 120px; padding: 14px 20px;
+    border-right: 1px solid var(--bdr);
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .stats-bar-item:last-child { border-right: none; }
+  .stats-bar-label { font-size: 9px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--gray); }
+  .stats-bar-val   { font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--dark); }
+  .stats-bar-val.indigo { color: var(--indigo); }
+  .stats-bar-val.green  { color: var(--green); }
+
+  .clients-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px; margin-top: 14px;
+  }
+  .client-card {
+    background: var(--surf); border: 1px solid var(--bdr);
+    border-radius: 14px; padding: 18px;
+    box-shadow: var(--shadow);
+    transition: transform .2s, box-shadow .2s;
+    animation: popIn .2s ease; position: relative; overflow: hidden;
+  }
+  .client-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 3px; border-radius: 14px 14px 0 0;
+  }
+  .client-card:nth-child(5n+1)::before { background: linear-gradient(90deg,var(--indigo),var(--violet)); }
+  .client-card:nth-child(5n+2)::before { background: linear-gradient(90deg,var(--teal),#06b6d4); }
+  .client-card:nth-child(5n+3)::before { background: linear-gradient(90deg,var(--orange),#f97316); }
+  .client-card:nth-child(5n+4)::before { background: linear-gradient(90deg,var(--green),#34d399); }
+  .client-card:nth-child(5n+5)::before { background: linear-gradient(90deg,#ec4899,#f43f5e); }
+  .client-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+  .client-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .client-avatar-big {
+    width: 42px; height: 42px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; color: #fff;
+    font-family: var(--mono); flex-shrink: 0;
+  }
+  .av-1 { background: linear-gradient(135deg,#6366f1,#8b5cf6); }
+  .av-2 { background: linear-gradient(135deg,#0d9488,#06b6d4); }
+  .av-3 { background: linear-gradient(135deg,#f59e0b,#f97316); }
+  .av-4 { background: linear-gradient(135deg,#10b981,#34d399); }
+  .av-5 { background: linear-gradient(135deg,#ec4899,#f43f5e); }
+
+  .client-info-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--gray2); margin-bottom: 6px;
+  }
+  .client-info-row i { font-size: 13px; color: var(--indigo); flex-shrink: 0; }
+  .client-card-footer {
+    display: flex; gap: 6px; margin-top: 14px;
+    padding-top: 12px; border-top: 1px solid var(--bdr);
+  }
+
+  .view-toggle {
+    display: flex; gap: 4px; background: var(--bg);
+    border: 1px solid var(--bdr); border-radius: 8px; padding: 3px;
+  }
+  .view-btn {
+    padding: 5px 10px; border-radius: 6px; font-size: 13px;
+    border: none; cursor: pointer; background: transparent;
+    color: var(--gray); transition: all .15s;
+  }
+  .view-btn.active { background: var(--surf); color: var(--indigo); box-shadow: var(--shadow); }
+
+  .clients-grid-wrap { display: block; }
+  .clients-table-wrap { display: none; margin-top: 14px; }
+
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(30,27,75,.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999; opacity: 0; pointer-events: none;
+    transition: opacity .25s ease;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-box {
+    background: var(--surf); border: 1px solid var(--bdr);
+    border-radius: 16px; padding: 28px;
+    width: 480px; max-width: 95vw;
+    transform: translateY(14px) scale(.97);
+    transition: transform .25s ease;
+    box-shadow: var(--shadow-lg);
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-overlay.open .modal-box { transform: translateY(0) scale(1); }
+  .modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .modal-icon { width: 44px; height: 44px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .modal-title { font-size: 16px; font-weight: 600; color: var(--dark); }
+  .modal-sub   { font-size: 11px; color: var(--gray); margin-top: 2px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--gray); }
+  .empty-state i { font-size: 48px; color: var(--bdr2); margin-bottom: 14px; display: block; }
+  .empty-state p { font-size: 13px; margin-bottom: 16px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Clients
+      <span style="font-size:14px;font-weight:400;color:var(--gray);font-family:var(--mono);" id="clientCount">
+        ({{ clients|length }} au total)
+      </span>
+    </h1>
+    <div class="page-subtitle">Base de données clients FacturePro</div>
+  </div>
+  <div class="page-header-right">
+    <div class="view-toggle">
+      <button class="view-btn active" id="btnGrid" onclick="setView('grid')"><i class="ti ti-layout-grid"></i></button>
+      <button class="view-btn" id="btnList" onclick="setView('list')"><i class="ti ti-list"></i></button>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('modalAdd')">
+      <i class="ti ti-user-plus"></i> Ajouter un client
+    </button>
+  </div>
+</div>
+
+<!-- Stats -->
+{% set nb_part = clients|selectattr('type_client','equalto','particulier')|list|length %}
+{% set nb_pro  = clients|selectattr('type_client','equalto','professionnel')|list|length %}
+<div class="stats-bar">
+  <div class="stats-bar-item">
+    <div class="stats-bar-label">Total clients</div>
+    <div class="stats-bar-val indigo">{{ clients|length }}</div>
+  </div>
+  <div class="stats-bar-item">
+    <div class="stats-bar-label">Particuliers</div>
+    <div class="stats-bar-val">{{ nb_part }}</div>
+  </div>
+  <div class="stats-bar-item">
+    <div class="stats-bar-label">Professionnels</div>
+    <div class="stats-bar-val">{{ nb_pro }}</div>
+  </div>
+</div>
+
+<!-- Recherche -->
+<div class="search-bar" style="margin-bottom:4px;">
+  <div class="search-wrap">
+    <i class="ti ti-search"></i>
+    <input class="search-input" type="text" id="searchInput"
+           placeholder="Rechercher par nom, email, téléphone..."
+           oninput="filterClients()">
+  </div>
+  <select class="btn btn-outline" id="filterType" onchange="filterClients()"
+          style="padding:8px 14px;font-size:12px;">
+    <option value="">Tous les types</option>
+    <option value="particulier">Particuliers</option>
+    <option value="professionnel">Professionnels</option>
+  </select>
+</div>
+
+{% if clients %}
+
+<!-- VUE GRILLE -->
+<div class="clients-grid-wrap" id="gridView">
+  <div class="clients-grid" id="clientsGrid">
+    {% for c in clients %}
+    {% set av_class = 'av-' ~ ((loop.index0 % 5) + 1) %}
+    {% set initiales = (c.prenom[0] if c.prenom else '') ~ (c.nom[0] if c.nom else '') %}
+    <div class="client-card"
+         data-type="{{ c.type_client }}"
+         data-search="{{ c.nom|lower }} {{ c.prenom|lower if c.prenom else '' }} {{ c.email|lower if c.email else '' }} {{ c.telephone if c.telephone else '' }}">
+      <div class="client-card-header">
+        <div class="client-avatar-big {{ av_class }}">{{ initiales|upper }}</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--dark);">{{ c.nom_complet() }}</div>
+          <div style="margin-top:3px;">
+            {% if c.type_client == 'professionnel' %}
+              <span class="badge badge-violet">Professionnel</span>
+            {% else %}
+              <span class="badge badge-indigo">Particulier</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% if c.email %}
+      <div class="client-info-row"><i class="ti ti-mail"></i>{{ c.email }}</div>
+      {% endif %}
+      {% if c.telephone %}
+      <div class="client-info-row"><i class="ti ti-phone"></i>{{ c.telephone }}</div>
+      {% endif %}
+      {% if c.adresse %}
+      <div class="client-info-row"><i class="ti ti-map-pin"></i>{{ c.adresse }}</div>
+      {% endif %}
+      <div class="client-card-footer">
+        <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;"
+                onclick="openEditModal({{ c.id }}, '{{ c.nom }}', '{{ c.prenom or '' }}', '{{ c.email or '' }}', '{{ c.telephone or '' }}', '{{ c.adresse or '' }}', '{{ c.type_client }}')">
+          <i class="ti ti-edit"></i> Modifier
+        </button>
+        <a href="{{ url_for('supprimer_client', id=c.id) }}"
+           class="btn btn-danger btn-sm"
+           onclick="return confirm('Supprimer {{ c.nom_complet() }} ?')">
+          <i class="ti ti-trash"></i>
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- VUE LISTE -->
+<div class="clients-table-wrap" id="listView">
+  <div class="panel" style="padding:0;overflow:hidden;">
+    <div class="table-wrapper">
+      <table class="table" id="clientsTable">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Nom / Société</th>
+            <th>Email</th>
+            <th>Téléphone</th>
+            <th>Adresse</th>
+            <th style="text-align:center;">Type</th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in clients %}
+          {% set av_class = 'av-' ~ ((loop.index0 % 5) + 1) %}
+          {% set initiales = (c.prenom[0] if c.prenom else '') ~ (c.nom[0] if c.nom else '') %}
+          <tr>
+            <td>
+              <div class="client-avatar {{ av_class }}"
+                   style="width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;font-family:var(--mono);">
+                {{ initiales|upper }}
+              </div>
+            </td>
+            <td class="td-bold">{{ c.nom_complet() }}</td>
+            <td>{{ c.email or '—' }}</td>
+            <td class="td-mono">{{ c.telephone or '—' }}</td>
+            <td style="color:var(--gray);font-size:11px;">{{ c.adresse or '—' }}</td>
+            <td style="text-align:center;">
+              {% if c.type_client == 'professionnel' %}
+                <span class="badge badge-violet">Professionnel</span>
+              {% else %}
+                <span class="badge badge-indigo">Particulier</span>
+              {% endif %}
+            </td>
+            <td>
+              <div style="display:flex;gap:5px;justify-content:flex-end;">
+                <button class="btn btn-ghost btn-sm"
+                        onclick="openEditModal({{ c.id }}, '{{ c.nom }}', '{{ c.prenom or '' }}', '{{ c.email or '' }}', '{{ c.telephone or '' }}', '{{ c.adresse or '' }}', '{{ c.type_client }}')">
+                  <i class="ti ti-edit"></i>
+                </button>
+                <a href="{{ url_for('supprimer_client', id=c.id) }}"
+                   class="btn btn-danger btn-sm"
+                   onclick="return confirm('Supprimer {{ c.nom_complet() }} ?')">
+                  <i class="ti ti-trash"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<div class="panel" style="margin-top:14px;">
+  <div class="empty-state">
+    <i class="ti ti-users-off"></i>
+    <p>Aucun client enregistré pour le moment.</p>
+    <button class="btn btn-primary" onclick="openModal('modalAdd')">
+      <i class="ti ti-user-plus"></i> Ajouter mon premier client
+    </button>
+  </div>
+</div>
+{% endif %}
+
+
+<!-- ══ MODAL AJOUTER ══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalAdd">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:var(--indigo-bg);color:var(--indigo);">
+        <i class="ti ti-user-plus"></i>
+      </div>
+      <div>
+        <div class="modal-title">Ajouter un client</div>
+        <div class="modal-sub">Enregistré en base de données</div>
+      </div>
+    </div>
+    <form method="POST" action="{{ url_for('ajouter_client') }}">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Nom *</label>
+          <input class="form-control" type="text" name="nom" placeholder="Dupont" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prénom / Société</label>
+          <input class="form-control" type="text" name="prenom" placeholder="Marie">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-control" type="email" name="email" placeholder="client@email.fr">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Téléphone</label>
+          <input class="form-control" type="tel" name="telephone" placeholder="06 00 00 00 00">
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Adresse</label>
+          <input class="form-control" type="text" name="adresse" placeholder="12 rue Victor Hugo, 75001 Paris">
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Type de client</label>
+          <select class="form-control" name="type_client">
+            <option value="particulier">Particulier</option>
+            <option value="professionnel">Professionnel</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modalAdd')">
+          <i class="ti ti-x"></i> Annuler
+        </button>
+        <button type="submit" class="btn btn-primary">
+          <i class="ti ti-device-floppy"></i> Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ MODAL MODIFIER ════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalEdit">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:var(--violet-bg);color:var(--violet);">
+        <i class="ti ti-edit"></i>
+      </div>
+      <div>
+        <div class="modal-title">Modifier le client</div>
+        <div class="modal-sub">Les modifications seront enregistrées en base de données</div>
+      </div>
+    </div>
+    <form method="POST" action="" id="editForm">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Nom *</label>
+          <input class="form-control" type="text" name="nom" id="editNom" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prénom / Société</label>
+          <input class="form-control" type="text" name="prenom" id="editPrenom">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-control" type="email" name="email" id="editEmail">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Téléphone</label>
+          <input class="form-control" type="tel" name="telephone" id="editTel">
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Adresse</label>
+          <input class="form-control" type="text" name="adresse" id="editAdresse">
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Type</label>
+          <select class="form-control" name="type_client" id="editType">
+            <option value="particulier">Particulier</option>
+            <option value="professionnel">Professionnel</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modalEdit')">
+          <i class="ti ti-x"></i> Annuler
+        </button>
+        <button type="submit" class="btn btn-violet">
+          <i class="ti ti-device-floppy"></i> Enregistrer les modifications
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  var currentView = 'grid';
+
+  function setView(v) {
+    currentView = v;
+    document.getElementById('gridView').style.display = v === 'grid' ? 'block' : 'none';
+    document.getElementById('listView').style.display = v === 'list' ? 'block' : 'none';
+    document.getElementById('btnGrid').classList.toggle('active', v === 'grid');
+    document.getElementById('btnList').classList.toggle('active', v === 'list');
+  }
+
+  function filterClients() {
+    var search = document.getElementById('searchInput').value.toLowerCase();
+    var type   = document.getElementById('filterType').value;
+    var cards  = document.querySelectorAll('#clientsGrid .client-card');
+    var count  = 0;
+    cards.forEach(function(card) {
+      var text  = card.getAttribute('data-search') || '';
+      var cType = card.getAttribute('data-type') || '';
+      var show  = true;
+      if (search && !text.includes(search)) show = false;
+      if (type   && cType !== type)         show = false;
+      card.style.display = show ? '' : 'none';
+      if (show) count++;
+    });
+    document.getElementById('clientCount').textContent = '(' + count + ' affichés)';
+  }
+
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  function openEditModal(id, nom, prenom, email, tel, adresse, type) {
+    document.getElementById('editNom').value     = nom;
+    document.getElementById('editPrenom').value  = prenom;
+    document.getElementById('editEmail').value   = email;
+    document.getElementById('editTel').value     = tel;
+    document.getElementById('editAdresse').value = adresse;
+    document.getElementById('editType').value    = type;
+    // Route modifier (à ajouter dans app.py)
+    document.getElementById('editForm').action = '/clients/modifier/' + id;
+    openModal('modalEdit');
+  }
+
+  document.querySelectorAll('.modal-overlay').forEach(function(o) {
+    o.addEventListener('click', function(e) {
+      if (e.target === o) o.classList.remove('open');
+    });
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay.open').forEach(function(m) {
+        m.classList.remove('open');
+      });
+    }
+  });
+
+  // Animation initiale
+  document.querySelectorAll('.client-card').forEach(function(card, i) {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(12px)';
+    setTimeout(function() {
+      card.style.transition = 'opacity .25s ease, transform .25s ease';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, i * 60);
+  });
+</script>
+{% endblock %}

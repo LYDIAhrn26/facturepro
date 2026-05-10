@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vérifiez votre email — FacturePro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    *{ box-sizing:border-box; margin:0; padding:0; }
+    body{
+      font-family:'Sora',sans-serif;
+      background:linear-gradient(135deg,#1e1b4b,#4f46e5);
+      min-height:100vh;
+      display:flex; align-items:center; justify-content:center;
+      padding:20px;
+    }
+    .card{
+      background:#fff; border-radius:20px;
+      padding:48px 40px; max-width:480px; width:100%;
+      text-align:center;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
+      animation:popIn .4s ease;
+    }
+    @keyframes popIn{
+      from{ opacity:0; transform:scale(.94) translateY(20px); }
+      to  { opacity:1; transform:scale(1)  translateY(0); }
+    }
+    .icon-wrap{
+      width:80px; height:80px; border-radius:50%;
+      background:linear-gradient(135deg,#eef2ff,#f5f3ff);
+      display:flex; align-items:center; justify-content:center;
+      margin:0 auto 24px; font-size:36px; color:#6366f1;
+      animation:pulse 2s infinite;
+    }
+    @keyframes pulse{
+      0%,100%{ box-shadow:0 0 0 0 rgba(99,102,241,.3); }
+      50%     { box-shadow:0 0 0 12px rgba(99,102,241,0); }
+    }
+    h1{ font-size:24px; font-weight:700; color:#1e1b4b; margin-bottom:12px; }
+    .subtitle{ font-size:14px; color:#64748b; line-height:1.7; margin-bottom:28px; }
+    .email-badge{
+      background:#eef2ff; border:1px solid #c7d2fe;
+      border-radius:8px; padding:10px 18px;
+      font-size:14px; font-weight:600; color:#4f46e5;
+      display:inline-block; margin-bottom:28px;
+    }
+    .steps{
+      background:#f8fafc; border-radius:12px;
+      padding:20px 24px; margin-bottom:28px;
+      text-align:left;
+    }
+    .step{
+      display:flex; align-items:flex-start; gap:12px;
+      margin-bottom:14px; font-size:13px; color:#475569;
+    }
+    .step:last-child{ margin-bottom:0; }
+    .step-num{
+      width:24px; height:24px; border-radius:50%;
+      background:#6366f1; color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;
+    }
+    .btn-login{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:12px 28px; border-radius:9px;
+      background:linear-gradient(135deg,#6366f1,#8b5cf6);
+      color:#fff; text-decoration:none;
+      font-size:14px; font-weight:600; font-family:'Sora',sans-serif;
+      box-shadow:0 4px 14px rgba(99,102,241,.35);
+      transition:all .2s;
+    }
+    .btn-login:hover{ transform:translateY(-1px); box-shadow:0 6px 20px rgba(99,102,241,.45); }
+    .footer-note{
+      margin-top:20px; font-size:11px; color:#94a3b8;
+    }
+    .footer-note a{ color:#6366f1; text-decoration:none; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <div class="icon-wrap">
+    <i class="ti ti-mail"></i>
+  </div>
+
+  <h1>Vérifiez votre email !</h1>
+
+  <p class="subtitle">
+    Nous avons envoyé un email d'activation à :
+  </p>
+
+  <div class="email-badge">
+    <i class="ti ti-at"></i> {{ email }}
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>Ouvrez votre boîte mail <strong>{{ email }}</strong></div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>Cherchez l'email de <strong>FacturePro</strong> (vérifiez aussi les spams)</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>Cliquez sur le bouton <strong>"Activer mon compte"</strong></div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>Connectez-vous avec votre email et votre mot de passe</div>
+    </div>
+  </div>
+
+  <a href="{{ url_for('login') }}" class="btn-login">
+    <i class="ti ti-login"></i> Aller à la page de connexion
+  </a>
+
+  <div class="footer-note">
+    Vous n'avez pas reçu l'email ?
+    <a href="{{ url_for('register') }}">Réessayez l'inscription</a>
+  </div>
+
+</div>
+
+</body>
+</html>

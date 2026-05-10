@@ -1,0 +1,395 @@
+{% extends "base.html" %}
+{% block title %}Nouvelle facture — FacturePro{% endblock %}
+{% block page_title %}Nouvelle facture{% endblock %}
+
+{% block extra_css %}
+<style>
+  .facture-layout { display: grid; grid-template-columns: 1fr 320px; gap: 18px; align-items: start; }
+  .company-box {
+    background: linear-gradient(135deg, var(--indigo-bg), var(--violet-bg));
+    border: 1px solid rgba(99,102,241,.2); border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 14px;
+  }
+  .company-box-title { font-size: 9px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--indigo); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+  .company-info-row { display: flex; gap: 6px; font-size: 11px; color: var(--gray2); margin-bottom: 3px; }
+  .company-info-row strong { color: var(--dark); min-width: 70px; flex-shrink: 0; }
+
+  .lines-header {
+    display: grid; grid-template-columns: 2.5fr 1.2fr .7fr 1fr 1fr 36px;
+    gap: 8px; font-size: 9px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--gray);
+    padding: 0 0 8px; border-bottom: 2px solid var(--indigo-bg); margin-bottom: 6px;
+  }
+  .line-row {
+    display: grid; grid-template-columns: 2.5fr 1.2fr .7fr 1fr 1fr 36px;
+    gap: 8px; align-items: center; margin-bottom: 8px; animation: fadeIn .2s ease;
+  }
+  .line-total { font-size: 12px; font-weight: 600; color: var(--indigo); font-family: var(--mono); text-align: right; }
+
+  .preview-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; font-size: 11px; }
+  .prev-company-name { font-size: 12px; font-weight: 700; color: var(--indigo2); margin-bottom: 2px; }
+  .prev-company-info { font-size: 9px; color: #64748b; line-height: 1.7; }
+  .prev-num  { font-size: 13px; font-weight: 700; color: var(--indigo2); font-family: var(--mono); }
+  .prev-date { font-size: 8px; color: #94a3b8; margin-top: 1px; }
+  .prev-client-box { font-size: 9px; color: #475569; background: #f8fafc; padding: 7px 9px; border-radius: 5px; margin: 9px 0; border-left: 3px solid var(--indigo); line-height: 1.6; }
+  .prev-tbl { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  .prev-tbl th { background: var(--indigo-bg); padding: 4px 6px; font-size: 7px; font-weight: 700; text-transform: uppercase; color: var(--indigo); text-align: left; }
+  .prev-tbl td { padding: 4px 6px; font-size: 8px; color: #334155; border-bottom: 1px solid #f1f5f9; }
+  .prev-ttc { font-size: 13px; font-weight: 700; color: var(--indigo2); font-family: var(--mono); margin-top: 6px; padding-top: 6px; border-top: 2px solid var(--indigo-bg); text-align: right; }
+
+  .statut-btn { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; border: 1.5px solid var(--bdr); background: transparent; color: var(--gray2); font-family: var(--fn); transition: all .2s; width: 100%; text-align: left; margin-bottom: 6px; }
+  .statut-btn.active-orange { border-color: var(--orange); background: var(--orange-bg); color: var(--orange-txt); }
+  .statut-btn.active-green  { border-color: var(--green);  background: var(--green-bg);  color: var(--green-txt);  }
+  .sdot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+  .notif-payee { display: none; margin-top: 8px; padding: 9px 12px; background: var(--green-bg); border: 1px solid rgba(16,185,129,.2); border-radius: 8px; font-size: 11px; color: var(--green-txt); align-items: center; gap: 6px; }
+
+  .confirm-strip { display: none; align-items: center; gap: 9px; padding: 10px 14px; border-radius: 9px; font-size: 12px; margin-bottom: 12px; animation: popIn .2s ease; }
+  .strip-save { background: var(--green-bg); border: 1px solid rgba(16,185,129,.25); color: var(--green-txt); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Nouvelle facture</h1>
+    <div class="page-subtitle" style="display:flex;align-items:center;gap:8px;">
+      <span style="font-family:var(--mono);">Réf. auto :</span>
+      <span class="ref-tag">{{ prochain_numero }}</span>
+    </div>
+  </div>
+  <div class="page-header-right">
+    <a href="{{ url_for('liste_factures') }}" class="btn btn-outline">
+      <i class="ti ti-arrow-left"></i> Mes factures
+    </a>
+
+  </div>
+</div>
+
+<div id="stripSave" class="confirm-strip strip-save">
+  <i class="ti ti-database"></i> Facture enregistrée en base de données !
+</div>
+
+<form method="POST" action="{{ url_for('nouvelle_facture') }}" id="factureForm">
+<input type="hidden" name="statut_paiement" value="EN_ATTENTE">
+
+<div class="facture-layout">
+
+  <!-- Colonne gauche -->
+  <div style="display:flex;flex-direction:column;gap:12px;">
+
+    <!-- Infos entreprise auto -->
+    <div class="company-box">
+      <div class="company-box-title"><i class="ti ti-building-store"></i> Votre entreprise (rempli automatiquement)</div>
+      <div class="company-info-row"><strong>Nom</strong>{{ entreprise.nom or '—' }}</div>
+      <div class="company-info-row"><strong>SIRET</strong>{{ entreprise.siret or '—' }}</div>
+      <div class="company-info-row"><strong>Adresse</strong>{{ entreprise.adresse or '—' }}</div>
+      <div class="company-info-row"><strong>Email</strong>{{ entreprise.email or '—' }}</div>
+      <div class="company-info-row"><strong>IBAN</strong>{{ entreprise.iban or '—' }}</div>
+    </div>
+
+    <!-- Client -->
+    <div class="form-panel">
+      <div class="form-section-title"><i class="ti ti-user"></i> Informations client</div>
+
+      <script>
+        var clientsDB = [
+          {% for c in clients %}
+          { nom: {{ c.nom|tojson }}, prenom: {{ c.prenom|tojson }}, email: {{ c.email|tojson }}, telephone: {{ c.telephone|tojson }}, adresse: {{ c.adresse|tojson }} },
+          {% endfor %}
+        ];
+      </script>
+
+      <div class="form-grid">
+        <div class="form-group col-span-2" style="position:relative;">
+          <label class="form-label">
+            Nom / Société *
+            <span style="font-size:10px;color:var(--indigo);font-weight:400;"><i class="ti ti-bulb"></i> Tapez pour rechercher un client existant</span>
+          </label>
+          <input class="form-control" type="text" name="client_nom" id="clientNom"
+                 placeholder="Martin & Co" required autocomplete="off"
+                 oninput="searchClientF(this.value); updatePreview();">
+          <div id="clientSuggestionsF" style="
+            display:none; position:absolute; top:100%; left:0; right:0;
+            background:#fff; border:1.5px solid var(--indigo); border-radius:0 0 8px 8px;
+            z-index:200; max-height:200px; overflow-y:auto;
+            box-shadow:0 4px 16px rgba(99,102,241,.15);
+          "></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-control" type="email" name="client_email" id="clientEmail" placeholder="client@email.fr" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Téléphone</label>
+          <input class="form-control" type="tel" name="client_tel" id="clientTel" placeholder="01 00 00 00 00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date d'émission *</label>
+          <input class="form-control" type="date" name="date_emission" id="dateEmission" required oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date d'échéance</label>
+          <input class="form-control" type="date" name="date_echeance" id="dateEcheance" oninput="updatePreview()">
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Adresse</label>
+          <input class="form-control" type="text" name="client_adresse" id="clientAdresse" placeholder="8 rue du Commerce, 75015 Paris" oninput="updatePreview()">
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Conditions de paiement</label>
+          <select class="form-control" name="cond_paiement">
+            <option value="30 jours">30 jours après facturation</option>
+            <option value="15 jours">15 jours</option>
+            <option value="À réception">À réception</option>
+            <option value="60 jours">60 jours</option>
+            <option value="40/50/solde">40% commande — 50% travaux — Solde à réception</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lignes -->
+    <div class="form-panel">
+      <div class="form-section-title"><i class="ti ti-list"></i> Lignes de prestation</div>
+      <div class="lines-header">
+        <span>Description</span><span>Type</span><span>Qté</span><span>Prix HT (€)</span><span>Total HT</span><span></span>
+      </div>
+      <div id="linesContainer"></div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="addLine()" style="margin-top:4px;">
+        <i class="ti ti-plus"></i> Ajouter une ligne
+      </button>
+      <div id="hiddenLines"></div>
+
+      <div class="total-box">
+        <div class="total-row"><span>Sous-total HT</span><span id="outHT" style="font-family:var(--mono);">0,00 €</span></div>
+        <div class="total-row">
+          <span>TVA (%) — saisissez le taux</span>
+          <span style="display:flex;align-items:center;gap:8px;">
+            <input type="number" name="tva" id="tvaInput" value="20" min="0" max="100" step="0.5"
+                   style="width:70px;background:transparent;border:1px solid rgba(99,102,241,.3);border-radius:5px;padding:3px 7px;font-size:12px;color:var(--dark);font-family:var(--fn);text-align:center;"
+                   oninput="calcTotals()">
+            <span style="font-size:11px;color:var(--gray);">%</span>
+            <span id="outTVA" style="font-family:var(--mono);min-width:80px;text-align:right;">0,00 €</span>
+          </span>
+        </div>
+        <div class="total-row total-final"><span>Total TTC</span><span id="outTTC">0,00 €</span></div>
+      </div>
+
+      <input type="hidden" name="montant_ht" id="hiddenHT">
+      <input type="hidden" name="montant_ttc" id="hiddenTTC">
+
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label">Remarques / RIB / Conditions</label>
+        <textarea class="form-control" name="remarques" rows="2"
+                  placeholder="Paiement par virement bancaire.">Paiement par virement bancaire.{% if entreprise.iban %} IBAN : {{ entreprise.iban }}{% endif %}{% if entreprise.bic %} — BIC : {{ entreprise.bic }}{% endif %}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Colonne droite -->
+  <div style="display:flex;flex-direction:column;gap:12px;">
+
+
+
+    <!-- Aperçu -->
+    <div>
+      <div style="font-size:11px;font-weight:600;color:var(--dark);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+        <i class="ti ti-eye" style="color:var(--indigo);font-size:14px;"></i> Aperçu facture
+      </div>
+      <div class="preview-card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+          <div>
+            {% if entreprise.logo %}
+            <img src="{{ url_for('static', filename=entreprise.logo) }}" style="height:32px;margin-bottom:5px;display:block;" alt="Logo">
+            {% endif %}
+            <div class="prev-company-name">{{ entreprise.nom or '—' }}</div>
+            <div class="prev-company-info">{{ entreprise.adresse or '' }}<br>{{ entreprise.email or '' }}<br>SIRET : {{ entreprise.siret or '' }}</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="prev-num">{{ prochain_numero }}</div>
+            <div class="prev-date" id="prevDate">—</div>
+            <div class="prev-date" id="prevEch">Éch. —</div>
+          </div>
+        </div>
+        <div class="prev-client-box"><strong>Facturer à :</strong><br><span id="prevClient">—</span></div>
+        <table class="prev-tbl">
+          <thead><tr><th>Prestation</th><th>Qté</th><th style="text-align:right;">HT</th></tr></thead>
+          <tbody id="prevLines"><tr><td colspan="3" style="color:#94a3b8;font-size:8px;text-align:center;padding:8px;">Ajoutez des lignes...</td></tr></tbody>
+        </table>
+        <div style="text-align:right;font-size:7px;color:#64748b;margin-bottom:1px;">HT : <strong id="prevHT">0,00 €</strong></div>
+        <div style="text-align:right;font-size:7px;color:#64748b;margin-bottom:1px;">TVA : <strong id="prevTVA">0,00 €</strong></div>
+        <div class="prev-ttc" id="prevTTC">Total TTC : 0,00 €</div>
+        <div style="margin-top:8px;padding-top:7px;border-top:1px solid #f1f5f9;font-size:7px;color:#64748b;line-height:1.7;">
+          {% if entreprise.iban %}IBAN : {{ entreprise.iban }}<br>{% endif %}
+          {% if entreprise.bic %}BIC : {{ entreprise.bic }}{% endif %}
+        </div>
+        <div style="margin-top:7px;padding-top:7px;border-top:1px solid #f1f5f9;text-align:center;font-size:7px;color:#94a3b8;">
+          {{ entreprise.nom }} — {{ entreprise.adresse }}<br>
+          {% if entreprise.siret %}SIRET : {{ entreprise.siret }}{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-panel">
+      <div class="form-section-title"><i class="ti ti-send"></i> Actions</div>
+      <button type="submit" form="factureForm" class="btn btn-primary" style="width:100%;justify-content:center;">
+        <i class="ti ti-device-floppy"></i> Enregistrer la facture
+      </button>
+    </div>
+  </div>
+
+</div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  var fmt = function(v) {
+    return parseFloat(v||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+  };
+  var lines = [];
+  var lineId = 0;
+
+  function addLine() {
+    var id = lineId++;
+    lines.push({id:id, desc:'', type:'', qty:1, pu:0});
+    renderLines();
+  }
+  function removeLine(id) {
+    lines = lines.filter(function(l){return l.id!==id;});
+    renderLines();
+  }
+  function renderLines() {
+    var container = document.getElementById('linesContainer');
+    container.innerHTML = '';
+    lines.forEach(function(l) {
+      var row = document.createElement('div');
+      row.className = 'line-row';
+      row.innerHTML =
+        '<input class="form-control" style="font-size:11px;" placeholder="Description..." value="'+l.desc+'"'+
+          ' oninput="lines.find(x=>x.id==='+l.id+').desc=this.value;updateHiddenLines();">'+
+        '<input class="form-control" style="font-size:11px;" placeholder="Type..." value="'+l.type+'"'+
+          ' oninput="lines.find(x=>x.id==='+l.id+').type=this.value;">'+
+        '<input class="form-control" type="number" min="1" value="'+l.qty+'" style="font-size:11px;text-align:center;"'+
+          ' oninput="lines.find(x=>x.id==='+l.id+').qty=parseFloat(this.value)||0;calcTotals();">'+
+        '<input class="form-control" type="number" min="0" step="0.01" value="'+(l.pu||'')+'" placeholder="0,00"'+
+          ' style="font-size:11px;text-align:right;" oninput="lines.find(x=>x.id==='+l.id+').pu=parseFloat(this.value)||0;calcTotals();">'+
+        '<div class="line-total" id="lt-'+l.id+'">'+fmt(l.qty*l.pu)+'</div>'+
+        '<button type="button" class="btn btn-danger btn-sm" onclick="removeLine('+l.id+')"><i class="ti ti-trash"></i></button>';
+      container.appendChild(row);
+    });
+    calcTotals();
+  }
+  function updateHiddenLines() {
+    var div = document.getElementById('hiddenLines');
+    div.innerHTML = '';
+    lines.forEach(function(l) {
+      div.innerHTML +=
+        '<input type="hidden" name="ligne_desc[]" value="'+l.desc+'">'+
+        '<input type="hidden" name="ligne_type[]" value="'+l.type+'">'+
+        '<input type="hidden" name="ligne_qty[]"  value="'+l.qty+'">'+
+        '<input type="hidden" name="ligne_pu[]"   value="'+l.pu+'">';
+    });
+  }
+  function calcTotals() {
+    updateHiddenLines();
+    var ht     = lines.reduce(function(s,l){return s+(l.qty*l.pu);},0);
+    var tva    = parseFloat(document.getElementById('tvaInput').value)||0;
+    var tvaAmt = ht*tva/100;
+    var ttc    = ht+tvaAmt;
+
+    document.getElementById('outHT').textContent  = fmt(ht);
+    document.getElementById('outTVA').textContent = fmt(tvaAmt);
+    document.getElementById('outTTC').textContent = fmt(ttc);
+    document.getElementById('hiddenHT').value     = ht.toFixed(2);
+    document.getElementById('hiddenTTC').value    = ttc.toFixed(2);
+    document.getElementById('prevHT').textContent  = fmt(ht);
+    document.getElementById('prevTVA').textContent = fmt(tvaAmt);
+    document.getElementById('prevTTC').textContent = 'Total TTC : '+fmt(ttc);
+
+    lines.forEach(function(l){var el=document.getElementById('lt-'+l.id);if(el)el.textContent=fmt(l.qty*l.pu);});
+
+    var prevLines = document.getElementById('prevLines');
+    var active = lines.filter(function(l){return l.desc||l.pu;});
+    prevLines.innerHTML = active.length===0
+      ? '<tr><td colspan="3" style="color:#94a3b8;font-size:8px;text-align:center;padding:8px;">Ajoutez des lignes...</td></tr>'
+      : active.map(function(l){return '<tr><td>'+(l.desc||'—')+'</td><td style="text-align:center;">'+l.qty+'</td><td style="text-align:right;font-family:var(--mono);">'+fmt(l.qty*l.pu)+'</td></tr>';}).join('');
+  }
+  // ── Autocomplétion client ─────────────────────────────────────────────────
+  function searchClientF(val) {
+    var box = document.getElementById('clientSuggestionsF');
+    if (!val || val.length < 1) { box.style.display = 'none'; return; }
+    var matches = clientsDB.filter(function(c) {
+      var fn = (c.nom + ' ' + c.prenom).toLowerCase();
+      return fn.indexOf(val.toLowerCase()) !== -1;
+    });
+    if (!matches.length) { box.style.display = 'none'; return; }
+    box.innerHTML = '';
+    matches.forEach(function(c) {
+      var item = document.createElement('div');
+      var fn = (c.nom + (c.prenom ? ' ' + c.prenom : '')).trim();
+      item.innerHTML =
+        '<div style="font-weight:600;color:var(--dark);font-size:12px;">' + fn + '</div>' +
+        '<div style="font-size:10px;color:var(--gray);">' + (c.email||'') + (c.telephone?' · '+c.telephone:'') + '</div>';
+      item.style.cssText = 'padding:10px 14px;cursor:pointer;border-bottom:1px solid #f1f5f9;';
+      item.onmouseover = function() { this.style.background = '#eef2ff'; };
+      item.onmouseout  = function() { this.style.background = ''; };
+      item.onclick = function() {
+        document.getElementById('clientNom').value     = c.nom || '';
+        document.getElementById('clientEmail').value   = c.email || '';
+        document.getElementById('clientTel').value     = c.telephone || '';
+        document.getElementById('clientAdresse').value = c.adresse || '';
+        box.style.display = 'none';
+        updatePreview();
+      };
+      box.appendChild(item);
+    });
+    box.style.display = 'block';
+  }
+  document.addEventListener('click', function(e) {
+    var box = document.getElementById('clientSuggestionsF');
+    var inp = document.getElementById('clientNom');
+    if (box && inp && !inp.contains(e.target) && !box.contains(e.target)) box.style.display = 'none';
+  });
+
+  function updatePreview() {
+    var nom  = document.getElementById('clientNom').value;
+    var mail = document.getElementById('clientEmail').value;
+    var adr  = document.getElementById('clientAdresse').value;
+    var dt   = document.getElementById('dateEmission').value;
+    var ech  = document.getElementById('dateEcheance').value;
+    document.getElementById('prevClient').innerHTML = [nom?'<strong>'+nom+'</strong>':null,adr,mail].filter(Boolean).join('<br>') || '—';
+    document.getElementById('prevDate').textContent = dt ? new Date(dt).toLocaleDateString('fr-FR') : '—';
+    document.getElementById('prevEch').textContent  = ech ? 'Éch. '+new Date(ech).toLocaleDateString('fr-FR') : 'Éch. —';
+  }
+  function setStatut(s) {
+    var ba=document.getElementById('btnAttente');
+    var bp=document.getElementById('btnPayee');
+    var n =document.getElementById('notifPayee');
+    var inp=document.getElementById('statutInput');
+    if(s==='payee'){
+      bp.className='statut-btn active-green';
+      ba.className='statut-btn';
+      n.style.display='flex';
+      inp.value='PAYEE';
+    } else {
+      ba.className='statut-btn active-orange';
+      bp.className='statut-btn';
+      n.style.display='none';
+      inp.value='EN_ATTENTE';
+    }
+  }
+
+  // Init
+  addLine();
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('dateEmission').value = today;
+  var ech = new Date(); ech.setDate(ech.getDate()+30);
+  document.getElementById('dateEcheance').value = ech.toISOString().split('T')[0];
+  updatePreview();
+</script>
+{% endblock %}

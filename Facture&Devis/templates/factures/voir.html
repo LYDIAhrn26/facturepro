@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% block title %}{{ facture.numero_facture }} — FacturePro{% endblock %}
+{% block page_title %}{{ facture.numero_facture }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .doc-wrap {
+    max-width: 860px; margin: 0 auto;
+    background: #fff; border: 1px solid #dde1f0;
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 8px 32px rgba(99,102,241,.12);
+  }
+
+  /* Header gradient */
+  .doc-header {
+    background: linear-gradient(135deg, #0f172a, #1e1b4b, #4f46e5);
+    padding: 28px 36px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .doc-logo-zone {
+    width: 90px; height: 65px;
+    background: rgba(255,255,255,.12); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  .doc-logo-zone img { width: 100%; height: 100%; object-fit: contain; }
+  .doc-logo-zone i   { font-size: 28px; color: #fff; }
+  .doc-title-zone { text-align: right; }
+  .doc-title    { font-size: 30px; font-weight: 700; color: #fff; letter-spacing: .08em; }
+  .doc-num      { font-size: 14px; color: rgba(255,255,255,.75); margin-top: 4px; font-family: monospace; }
+  .doc-meta     { font-size: 11px; color: rgba(255,255,255,.6); margin-top: 3px; }
+
+  /* Statut badge dans header */
+  .doc-statut {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 99px;
+    font-size: 11px; font-weight: 600; margin-top: 6px;
+  }
+  .doc-statut.payee   { background: rgba(16,185,129,.25); color: #6ee7b7; border: 1px solid rgba(16,185,129,.3); }
+  .doc-statut.attente { background: rgba(245,158,11,.2);  color: #fcd34d; border: 1px solid rgba(245,158,11,.3); }
+  .doc-statut-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Corps */
+  .doc-body { padding: 28px 36px; }
+
+  /* Bandeau infos clés */
+  .doc-infos-bar {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; background: #e2e8f0;
+    border: 1px solid #e2e8f0; border-radius: 10px;
+    overflow: hidden; margin-bottom: 22px;
+  }
+  .doc-info-cell {
+    background: #f8fafc; padding: 12px 14px;
+  }
+  .doc-info-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: #6366f1; margin-bottom: 4px; }
+  .doc-info-val   { font-size: 12px; font-weight: 600; color: #1e1b4b; }
+
+  /* Parties */
+  .doc-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; }
+  .doc-party {
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 9px; padding: 14px 16px;
+  }
+  .doc-party-label {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .12em; color: #6366f1;
+    margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #e2e8f0;
+  }
+  .doc-party-name { font-size: 14px; font-weight: 700; color: #1e1b4b; margin-bottom: 5px; }
+  .doc-party-info { font-size: 11px; color: #64748b; line-height: 1.75; }
+
+  /* Tableau */
+  .doc-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border-radius: 8px; overflow: hidden; }
+  .doc-table thead tr { background: linear-gradient(90deg, #1e1b4b, #4f46e5); }
+  .doc-table th { padding: 11px 12px; color: #fff; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .07em; }
+  .doc-table th:last-child { text-align: right; }
+  .doc-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 12px; }
+  .doc-table td:last-child { text-align: right; font-family: monospace; font-weight: 600; color: #1e1b4b; }
+  .doc-table tbody tr:nth-child(even) { background: #f8fafc; }
+  .doc-table tbody tr:hover { background: #f0f4ff; transition: background .15s; }
+  .num-col { color: #6366f1; font-weight: 700; }
+
+  /* Totaux */
+  .doc-totals-wrap { display: flex; justify-content: flex-end; margin-bottom: 22px; }
+  .doc-totals {
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 10px; padding: 16px 20px; min-width: 250px;
+  }
+  .doc-tot-row { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; margin-bottom: 7px; }
+  .doc-tot-final {
+    display: flex; justify-content: space-between;
+    font-size: 17px; font-weight: 700; color: #1e1b4b;
+    border-top: 2px solid #6366f1; padding-top: 10px; margin-top: 7px;
+  }
+  .doc-tot-final span:last-child { color: #6366f1; }
+
+  /* Conditions */
+  .doc-conditions {
+    background: #f0f4ff; border-left: 4px solid #6366f1;
+    border-radius: 0 8px 8px 0; padding: 14px 16px;
+    font-size: 12px; color: #475569; line-height: 1.8; margin-bottom: 20px;
+  }
+  .doc-conditions strong { color: #1e1b4b; display: block; margin-bottom: 6px; font-size: 13px; }
+
+  /* Remarques */
+  .doc-remarques {
+    background: #fffbeb; border: 1px solid #fde68a;
+    border-radius: 8px; padding: 12px 14px;
+    font-size: 12px; color: #92400e; margin-bottom: 20px;
+  }
+
+  /* Footer */
+  .doc-footer {
+    background: #f8fafc; border-top: 1px solid #e2e8f0;
+    padding: 14px 36px; text-align: center;
+    font-size: 10px; color: #94a3b8; line-height: 1.7;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>{{ facture.numero_facture }}</h1>
+    <div class="page-subtitle">
+      {{ facture.client_nom }} —
+      {{ facture.date_emission.strftime('%d/%m/%Y') if facture.date_emission else '—' }}
+
+    </div>
+  </div>
+  <div class="page-header-right">
+    <a href="{{ url_for('liste_factures') }}" class="btn btn-outline">
+      <i class="ti ti-arrow-left"></i> Mes factures
+    </a>
+    <a href="{{ url_for('modifier_facture', id=facture.id) }}" class="btn btn-ghost">
+      <i class="ti ti-edit"></i> Modifier
+    </a>
+
+    <a href="{{ url_for('pdf_facture', id=facture.id) }}" class="btn btn-primary">
+      <i class="ti ti-download"></i> Télécharger PDF
+    </a>
+    <a href="{{ url_for('envoyer_facture', id=facture.id) }}" class="btn btn-teal"
+       onclick="return confirm('Envoyer cette facture par email à ' + '{{ facture.client_email or "ce client" }}' + ' ?')">
+      <i class="ti ti-mail"></i> Envoyer au client
+    </a>
+  </div>
+</div>
+
+<div class="doc-wrap">
+
+  <!-- Header -->
+  <div class="doc-header">
+    <div class="doc-logo-zone">
+      {% if entreprise.logo %}
+        <img src="{{ url_for('static', filename=entreprise.logo) }}" alt="Logo">
+      {% else %}
+        <i class="ti ti-building-store"></i>
+      {% endif %}
+    </div>
+    <div class="doc-title-zone">
+      <div class="doc-title">FACTURE</div>
+      <div class="doc-num">N° {{ facture.numero_facture }}</div>
+      <div class="doc-meta">Émise le : {{ facture.date_emission.strftime('%d/%m/%Y') if facture.date_emission else '—' }}</div>
+      <div class="doc-meta">Échéance : {{ facture.date_echeance.strftime('%d/%m/%Y') if facture.date_echeance else '—' }}</div>
+
+    </div>
+  </div>
+
+  <div class="doc-body">
+
+    <!-- Bandeau infos -->
+    <div class="doc-infos-bar">
+      <div class="doc-info-cell">
+        <div class="doc-info-label">N° Facture</div>
+        <div class="doc-info-val">{{ facture.numero_facture }}</div>
+      </div>
+      <div class="doc-info-cell">
+        <div class="doc-info-label">Date d'émission</div>
+        <div class="doc-info-val">{{ facture.date_emission.strftime('%d/%m/%Y') if facture.date_emission else '—' }}</div>
+      </div>
+      <div class="doc-info-cell">
+        <div class="doc-info-label">Date d'échéance</div>
+        <div class="doc-info-val">
+          {{ facture.date_echeance.strftime('%d/%m/%Y') if facture.date_echeance else '—' }}
+        </div>
+      </div>
+      <div class="doc-info-cell">
+        <div class="doc-info-label">Conditions</div>
+        <div class="doc-info-val">{{ facture.conditions_paiement or '30 jours' }}</div>
+      </div>
+    </div>
+
+    <!-- Parties -->
+    <div class="doc-parties">
+      <div class="doc-party">
+        <div class="doc-party-label">Émetteur</div>
+        <div class="doc-party-name">{{ entreprise.nom }}</div>
+        <div class="doc-party-info">
+          {% if entreprise.adresse %}{{ entreprise.adresse }}<br>{% endif %}
+          {% if entreprise.email %}{{ entreprise.email }}<br>{% endif %}
+          {% if entreprise.telephone %}{{ entreprise.telephone }}<br>{% endif %}
+          {% if entreprise.siret %}SIRET : {{ entreprise.siret }}<br>{% endif %}
+          {% if entreprise.siren %}SIREN : {{ entreprise.siren }}{% endif %}
+        </div>
+      </div>
+      <div class="doc-party">
+        <div class="doc-party-label">Facturer à</div>
+        <div class="doc-party-name">{{ facture.client_nom or '—' }}</div>
+        <div class="doc-party-info">
+          {% if facture.client_adresse %}{{ facture.client_adresse }}<br>{% endif %}
+          {% if facture.client_email %}{{ facture.client_email }}<br>{% endif %}
+          {% if facture.client_telephone %}{{ facture.client_telephone }}{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Tableau lignes -->
+    <table class="doc-table">
+      <thead>
+        <tr>
+          <th style="width:40px;">N°</th>
+          <th>Description</th>
+          <th style="text-align:center;width:60px;">Qté</th>
+          <th style="text-align:center;width:60px;">U</th>
+          <th style="text-align:right;width:90px;">Prix U. HT</th>
+          <th style="text-align:center;width:60px;">TVA</th>
+          <th style="text-align:right;width:100px;">Total HT</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if facture.lignes %}
+          {% for ligne in facture.lignes %}
+          <tr>
+            <td class="num-col">{{ loop.index }}</td>
+            <td>{{ ligne.description }}</td>
+            <td style="text-align:center;">{{ ligne.quantite }}</td>
+            <td style="text-align:center;color:#64748b;">{{ ligne.type_service or 'Ens.' }}</td>
+            <td style="text-align:right;">{{ "%.2f"|format(ligne.prix_unitaire_ht|float) }} €</td>
+            <td style="text-align:center;color:#64748b;">{{ facture.tva|int }}%</td>
+            <td>{{ "%.2f"|format(ligne.total_ht|float) }} €</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px;">Aucune ligne enregistrée.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+
+    <!-- Totaux -->
+    <div class="doc-totals-wrap">
+      <div class="doc-totals">
+        <div class="doc-tot-row"><span>Total HT</span><span>{{ "%.2f"|format(facture.montant_ht|float) }} €</span></div>
+        <div class="doc-tot-row"><span>TVA ({{ facture.tva|int }}%)</span><span>{{ "%.2f"|format(facture.montant_tva|float) }} €</span></div>
+        <div class="doc-tot-final"><span>Total TTC</span><span>{{ "%.2f"|format(facture.montant_ttc|float) }} €</span></div>
+      </div>
+    </div>
+
+    <!-- Remarques -->
+    {% if facture.remarques %}
+    <div class="doc-remarques">
+      <strong><i class="ti ti-note"></i> Remarques</strong><br>
+      {{ facture.remarques }}
+    </div>
+    {% endif %}
+
+    <!-- Conditions paiement -->
+    <div class="doc-conditions">
+      <strong>Conditions de paiement :</strong>
+      {{ facture.conditions_paiement or '30 jours après date de facturation' }}<br>
+      Nos conditions habituelles de paiement :<br>
+      40% à la commande — 50% en cours de travaux<br>
+      Le solde à la terminaison des travaux, Payable à réception
+      {% if entreprise.iban %}<br><strong>IBAN : {{ entreprise.iban }}</strong>{% endif %}
+      {% if entreprise.bic %} — <strong>BIC : {{ entreprise.bic }}</strong>{% endif %}
+    </div>
+
+  </div>
+
+  <div class="doc-footer">
+    {{ entreprise.nom }}
+    {% if entreprise.adresse %} — {{ entreprise.adresse }}{% endif %}
+    {% if entreprise.siret %}<br>SIRET : {{ entreprise.siret }}{% endif %}
+    {% if entreprise.forme %} — {{ entreprise.forme }}{% endif %}
+    {% if entreprise.capital %} — Capital : {{ entreprise.capital }}{% endif %}
+    {% if entreprise.activite %} — APE : {{ entreprise.activite }}{% endif %}
+  </div>
+
+</div>
+
+{% endblock %}

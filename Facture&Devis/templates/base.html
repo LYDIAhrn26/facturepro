@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}FacturePro{% endblock %}</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Tabler Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+  <!-- CSS Global -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <!-- ══ SIDEBAR ══════════════════════════════════════════════════════════ -->
+  <aside class="sidebar">
+
+    <div class="sb-logo">
+      <div class="sb-logo-name">FacturePro</div>
+      <div class="sb-logo-sub">Services · Facturation</div>
+    </div>
+
+    <nav class="sb-nav">
+
+      <div class="sb-section">
+        <div class="sb-section-label">Menu principal</div>
+
+        <a href="{{ url_for('dashboard') }}"
+           class="sb-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+          <i class="ti ti-layout-dashboard"></i>
+          Tableau de bord
+        </a>
+      </div>
+
+      <div class="sb-section">
+        <div class="sb-section-label">Devis</div>
+
+        <a href="{{ url_for('liste_devis') }}"
+           class="sb-item {% if request.endpoint == 'liste_devis' %}active{% endif %}">
+          <i class="ti ti-files"></i>
+          Mes devis
+        </a>
+
+        <a href="{{ url_for('nouveau_devis') }}"
+           class="sb-item {% if request.endpoint == 'nouveau_devis' %}active{% endif %}">
+          <i class="ti ti-file-plus"></i>
+          Nouveau devis
+        </a>
+      </div>
+
+      <div class="sb-section">
+        <div class="sb-section-label">Factures</div>
+
+        <a href="{{ url_for('liste_factures') }}"
+           class="sb-item {% if request.endpoint == 'liste_factures' %}active{% endif %}">
+          <i class="ti ti-receipt-2"></i>
+          Mes factures
+        </a>
+
+        <a href="{{ url_for('nouvelle_facture') }}"
+           class="sb-item {% if request.endpoint == 'nouvelle_facture' %}active{% endif %}">
+          <i class="ti ti-file-invoice"></i>
+          Nouvelle facture
+        </a>
+      </div>
+
+      <div class="sb-section">
+        <div class="sb-section-label">Autres</div>
+
+        <a href="{{ url_for('liste_clients') }}"
+           class="sb-item {% if request.endpoint == 'liste_clients' %}active{% endif %}">
+          <i class="ti ti-users"></i>
+          Clients
+        </a>
+      </div>
+
+    </nav>
+
+    <div class="sb-bottom">
+      <div class="sb-section" style="margin-top:0; border-top: 1px solid rgba(255,255,255,.1); padding-top: 10px;">
+        <a href="{{ url_for('liste_notifications') }}"
+           class="sb-item {% if request.endpoint == 'liste_notifications' %}active{% endif %}">
+          <i class="ti ti-bell"></i>
+          Notifications
+        </a>
+        <a href="{{ url_for('profil') }}" class="sb-item {% if request.endpoint == 'profil' %}active{% endif %}">
+          <i class="ti ti-building-store"></i>
+          Profil entreprise
+        </a>
+      </div>
+      <div class="sb-user">
+        {% if entreprise and entreprise.logo %}
+        <div class="sb-avatar" style="overflow:hidden;padding:0;">
+          <img src="{{ url_for('static', filename=entreprise.logo) }}"
+               alt="Logo" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
+        </div>
+        {% else %}
+        <div class="sb-avatar">{{ user.initiales }}</div>
+        {% endif %}
+        <div class="sb-user-info">
+          <div class="sb-user-name">{{ user.nom }}</div>
+          <div class="sb-user-role">{{ entreprise.forme if entreprise else 'Gérant' }}</div>
+        </div>
+        <a href="{{ url_for('logout') }}" class="sb-logout" title="Se déconnecter">
+          <i class="ti ti-logout"></i>
+        </a>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ══ MAIN ═════════════════════════════════════════════════════════════ -->
+  <div class="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-title">{% block page_title %}{% endblock %}</div>
+      <div class="topbar-right">
+        <a href="{{ url_for('liste_notifications') }}" class="topbar-icon-btn" title="Notifications" style="text-decoration:none;">
+          <i class="ti ti-bell"></i>
+          <span class="notif-dot"></span>
+        </a>
+        <a href="{{ url_for('profil') }}" class="topbar-avatar" title="Mon profil" style="text-decoration:none;cursor:pointer;">{{ user.initiales }}</a>
+      </div>
+    </header>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">
+              <i class="ti ti-{% if category == 'success' %}check{% elif category == 'error' %}alert-circle{% else %}info-circle{% endif %}"></i>
+              {{ message }}
+              <button class="flash-close" onclick="this.parentElement.remove()">
+                <i class="ti ti-x"></i>
+              </button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Contenu de la page -->
+    <main class="page-content">
+      {% block content %}{% endblock %}
+    </main>
+
+  </div>
+</div>
+
+<!-- JS Global -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

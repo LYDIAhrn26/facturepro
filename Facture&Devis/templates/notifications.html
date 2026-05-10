@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Notifications — FacturePro{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block extra_css %}
+<style>
+  .notif-card {
+    background: var(--surf); border: 1px solid var(--bdr);
+    border-radius: 14px; padding: 0; overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .notif-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 16px 20px; border-bottom: 1px solid #f1f5f9;
+    transition: background .15s; position: relative;
+  }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-item:hover { background: #f8faff; }
+  .notif-item.non-lue { background: #f0f4ff; }
+  .notif-item.non-lue:hover { background: #eef2ff; }
+
+  .notif-dot {
+    position: absolute; top: 18px; right: 18px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--indigo);
+  }
+
+  .notif-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .ni-success { background: var(--green-bg);  color: var(--teal);   }
+  .ni-info    { background: var(--indigo-bg); color: var(--indigo); }
+  .ni-warning { background: var(--orange-bg); color: var(--orange); }
+
+  .notif-content { flex: 1; min-width: 0; }
+  .notif-msg  { font-size: 13px; color: var(--dark); line-height: 1.5; margin-bottom: 4px; }
+  .notif-time { font-size: 11px; color: var(--gray); font-family: var(--mono); }
+
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--gray);
+  }
+  .empty-state i { font-size: 48px; color: var(--bdr2); display: block; margin-bottom: 14px; }
+  .empty-state p { font-size: 14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Notifications</h1>
+    <div class="page-subtitle">Historique de vos activités</div>
+  </div>
+  {% if notifications %}
+  <div class="page-header-right">
+    <a href="{{ url_for('marquer_tout_lu') }}" class="btn btn-outline">
+      <i class="ti ti-checks"></i> Tout marquer comme lu
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="notif-card">
+  {% if notifications %}
+    {% for n in notifications %}
+    <div class="notif-item {% if not n.statut_lecture %}non-lue{% endif %}">
+      <div class="notif-icon
+        {% if n.type_notif == 'success' %}ni-success
+        {% elif n.type_notif == 'warning' %}ni-warning
+        {% else %}ni-info{% endif %}">
+        <i class="ti ti-{% if n.type_notif == 'success' %}circle-check{% elif n.type_notif == 'warning' %}clock{% else %}bell{% endif %}"></i>
+      </div>
+      <div class="notif-content">
+        <div class="notif-msg">{{ n.message }}</div>
+        <div class="notif-time">
+          <i class="ti ti-clock" style="font-size:10px;"></i>
+          {{ n.created_at.strftime('%d/%m/%Y à %H:%M') if n.created_at else '—' }}
+        </div>
+      </div>
+      {% if not n.statut_lecture %}
+      <div class="notif-dot"></div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty-state">
+    <i class="ti ti-bell-off"></i>
+    <p>Aucune notification pour le moment.</p>
+    <p style="font-size:13px;margin-top:8px;color:var(--gray);">
+      Vos activités (devis créés, factures payées...) apparaîtront ici.
+    </p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

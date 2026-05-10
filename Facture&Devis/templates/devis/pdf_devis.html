@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ devis.numero_devis }} — {{ entreprise.nom }}</title>
+  <style>
+    @page { size: A4; margin: 12mm 12mm 16mm 12mm; }
+    @media print { .no-print { display: none !important; } body { margin: 0; } }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 11px; color: #1a202c; background: #fff; }
+
+    /* Barre impression */
+    .print-bar {
+      background: linear-gradient(135deg, #1e1b4b, #4f46e5);
+      padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .print-bar-title { color: #fff; font-size: 14px; font-weight: 700; }
+    .print-btn {
+      background: #fff; color: #4f46e5; border: none;
+      padding: 9px 22px; border-radius: 7px; font-size: 13px;
+      font-weight: 700; cursor: pointer; font-family: Arial;
+    }
+    .print-btn:hover { background: #eef2ff; }
+
+    .doc { max-width: 800px; margin: 0 auto; padding: 20px; }
+
+    /* ── HEADER : Logo gauche | Numéro+date droite ── */
+    .header {
+      display: table; width: 100%;
+      margin-bottom: 20px; padding-bottom: 16px;
+      border-bottom: 3px solid #4f46e5;
+    }
+    .header-logo {
+      display: table-cell; vertical-align: middle;
+      width: 50%;
+    }
+    .header-logo img {
+      max-height: 70px; max-width: 200px; object-fit: contain;
+    }
+    .header-logo .logo-txt {
+      font-size: 24px; font-weight: 700; color: #4f46e5;
+    }
+    .header-info {
+      display: table-cell; vertical-align: middle;
+      width: 50%; text-align: right;
+    }
+    .header-info h1 {
+      font-size: 28px; font-weight: 700; color: #1e1b4b;
+      letter-spacing: .08em;
+    }
+    .header-info .num {
+      font-size: 14px; color: #4f46e5; font-weight: 700;
+      margin-top: 4px; font-family: monospace;
+    }
+    .header-info .date {
+      font-size: 11px; color: #64748b; margin-top: 3px;
+    }
+    {% if devis.description %}
+    .header-info .ref {
+      font-size: 11px; color: #64748b; margin-top: 3px;
+      font-style: italic;
+    }
+    {% endif %}
+
+    /* ── CLIENT au milieu ── */
+    .client-box {
+      text-align: center; margin-bottom: 18px;
+      padding: 14px; background: #f0f4ff;
+      border-radius: 8px; border: 1px solid #c7d2fe;
+    }
+    .client-label {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .12em; color: #6366f1; margin-bottom: 6px;
+    }
+    .client-name { font-size: 15px; font-weight: 700; color: #1e1b4b; margin-bottom: 4px; }
+    .client-info { font-size: 11px; color: #475569; line-height: 1.7; }
+
+    /* ── ENTREPRISE à droite ── */
+    .entreprise-box {
+      width: 60%; margin: 0 auto 18px auto;
+      padding: 12px 14px; background: #f8fafc;
+      border: 1px solid #e2e8f0; border-radius: 8px;
+      border-left: 4px solid #4f46e5;
+      text-align: center;
+    }
+    .entreprise-label {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .12em; color: #6366f1; margin-bottom: 6px;
+    }
+    .entreprise-name { font-size: 13px; font-weight: 700; color: #1e1b4b; margin-bottom: 4px; }
+    .entreprise-info { font-size: 10px; color: #64748b; line-height: 1.7; }
+
+    .clearfix { clear: both; }
+
+    /* ── Chantier ── */
+    .chantier {
+      background: #eff6ff; border-left: 3px solid #6366f1;
+      padding: 8px 12px; font-size: 11px; color: #3730a3;
+      margin-bottom: 14px; border-radius: 0 4px 4px 0;
+    }
+
+    /* ── TABLEAU PRESTATIONS ── */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    thead tr { background: #1e1b4b; }
+    th { padding: 9px 10px; color: #fff; text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: .06em; }
+    th:last-child { text-align: right; }
+    td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; font-size: 10px; color: #334155; }
+    td:last-child { text-align: right; font-weight: 700; }
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    .num-col { color: #6366f1; font-weight: 700; }
+
+    /* ── TOTAUX ── */
+    .totals-wrap { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+    .totals { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 7px; padding: 12px 16px; min-width: 230px; }
+    .tot-row { display: flex; justify-content: space-between; font-size: 11px; color: #64748b; margin-bottom: 5px; }
+    .tot-final { display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; color: #1e1b4b; border-top: 2px solid #6366f1; padding-top: 9px; margin-top: 6px; }
+    .tot-final span:last-child { color: #6366f1; }
+
+    /* ── REMARQUES ── */
+    .remarques { background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 12px; font-size: 10px; color: #92400e; margin-bottom: 14px; }
+
+    /* ── CONDITIONS ── */
+    .conditions { background: #f0f4ff; border-left: 4px solid #6366f1; border-radius: 0 6px 6px 0; padding: 12px 14px; font-size: 10px; color: #475569; line-height: 1.8; margin-bottom: 16px; }
+    .conditions strong { color: #1e1b4b; display: block; margin-bottom: 4px; font-size: 11px; }
+
+    /* ── SIGNATURE 2 COLONNES ── */
+    .signature-grid { display: table; width: 100%; margin-bottom: 20px; }
+    .sig-col { display: table-cell; width: 50%; vertical-align: top; }
+    .sig-col:first-child { padding-right: 10px; }
+    .sig-col:last-child  { padding-left: 10px; }
+    .sig-title { font-size: 12px; font-weight: 700; color: #1e1b4b; margin-bottom: 8px; }
+    .sig-box-client {
+      border: 1px dashed #cbd5e1; border-radius: 6px;
+      padding: 14px; min-height: 90px; background: #fafafa;
+    }
+    .sig-box-gerant {
+      border: 1px solid #e2e8f0; border-radius: 6px;
+      padding: 14px; min-height: 90px; background: #f8fafc;
+    }
+    .sig-mention { font-size: 10px; color: #94a3b8; margin-bottom: 36px; }
+    .sig-accord  { font-size: 10px; color: #6366f1; }
+    .sig-gerant-nom { font-size: 14px; font-weight: 700; color: #1e1b4b; margin-top: 30px; }
+
+    /* ── FOOTER ── */
+    .footer { border-top: 1px solid #e2e8f0; padding-top: 10px; text-align: center; font-size: 9px; color: #94a3b8; line-height: 1.7; }
+  </style>
+</head>
+<body>
+
+
+
+<div class="doc">
+
+  <!-- ── HEADER : Logo à gauche, Numéro+date à droite ── -->
+  <div class="header">
+    <div class="header-logo">
+      {% if entreprise.logo %}
+      <img src="{{ url_for('static', filename=entreprise.logo, _external=True) }}" alt="Logo">
+      {% else %}
+      <div class="logo-txt">{{ entreprise.nom[:2]|upper }}</div>
+      {% endif %}
+    </div>
+    <div class="header-info">
+      <h1>DEVIS</h1>
+      <div class="num">N° {{ devis.numero_devis }}</div>
+      <div class="date">Date : {{ devis.date_devis.strftime('%d/%m/%Y') if devis.date_devis else '—' }}</div>
+      {% if devis.description %}
+      <div class="ref">Réf : {{ devis.description }}</div>
+      {% endif %}
+      {% if devis.type_service %}
+      <div class="date">{{ devis.type_service }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── CLIENT au centre ── -->
+  <div class="client-box">
+    <div class="client-label">À l'attention de</div>
+    <div class="client-name">{{ devis.client_nom or '—' }}</div>
+    <div class="client-info">
+      {% if devis.client_adresse %}{{ devis.client_adresse }}<br>{% endif %}
+      {% if devis.client_email %}{{ devis.client_email }}<br>{% endif %}
+      {% if devis.client_telephone %}{{ devis.client_telephone }}{% endif %}
+    </div>
+  </div>
+
+  <!-- ── ENTREPRISE à droite ── -->
+  <div class="entreprise-box">
+    <div class="entreprise-label">Émetteur</div>
+    <div class="entreprise-name">{{ entreprise.nom }}</div>
+    <div class="entreprise-info">
+      {% if entreprise.adresse %}{{ entreprise.adresse }}<br>{% endif %}
+      {% if entreprise.email %}{{ entreprise.email }}<br>{% endif %}
+      {% if entreprise.telephone %}{{ entreprise.telephone }}<br>{% endif %}
+      {% if entreprise.siret %}SIRET : {{ entreprise.siret }}<br>{% endif %}
+      {% if entreprise.siren %}SIREN : {{ entreprise.siren }}<br>{% endif %}
+      {% if entreprise.activite %}{{ entreprise.activite }}{% endif %}
+    </div>
+  </div>
+  
+
+  <!-- ── Adresse chantier ── -->
+  {% if devis.adresse_presta %}
+  <div class="chantier">
+    <strong>Adresse du chantier :</strong> {{ devis.adresse_presta }}
+  </div>
+  {% endif %}
+
+  <!-- ── TABLEAU PRESTATIONS ── -->
+  <table>
+    <thead>
+      <tr>
+        <th style="width:35px;">N°</th>
+        <th>Description</th>
+        <th style="text-align:center;width:55px;">Qté</th>
+        <th style="text-align:right;width:85px;">Prix U. HT</th>
+        <th style="text-align:center;width:50px;">TVA</th>
+        <th style="text-align:right;width:95px;">Total HT</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if devis.lignes %}
+        {% for ligne in devis.lignes %}
+        <tr>
+          <td class="num-col">{{ loop.index }}</td>
+          <td>{{ ligne.description }}</td>
+          <td style="text-align:center;">{{ ligne.quantite }}</td>
+          <td style="text-align:right;">{{ "%.2f"|format(ligne.prix_unitaire_ht|float) }} €</td>
+          <td style="text-align:center;color:#64748b;">{{ devis.tva|int }}%</td>
+          <td>{{ "%.2f"|format(ligne.total_ht|float) }} €</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:14px;">Aucune ligne enregistrée.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <!-- ── TOTAUX ── -->
+  <div class="totals-wrap">
+    <div class="totals">
+      <div class="tot-row"><span>Total Net HT</span><span>{{ "%.2f"|format(devis.montant_ht|float) }} €</span></div>
+      <div class="tot-row"><span>TVA {{ devis.tva|int }}%</span><span>{{ "%.2f"|format(devis.montant_tva|float) }} €</span></div>
+      <div class="tot-row"><span>Total TVA</span><span>{{ "%.2f"|format(devis.montant_tva|float) }} €</span></div>
+      <div class="tot-final"><span>Total TTC à payer</span><span>{{ "%.2f"|format(devis.montant_ttc|float) }} €</span></div>
+    </div>
+  </div>
+
+  <!-- ── REMARQUES ── -->
+  {% if devis.remarques %}
+  <div class="remarques"><strong>Remarques :</strong> {{ devis.remarques }}</div>
+  {% endif %}
+
+  <!-- ── CONDITIONS DE PAIEMENT ── -->
+  <div class="conditions">
+    <strong>Conditions de paiements :</strong>
+    30 jours après date de facturation<br>
+    Nos conditions habituelles de paiement :<br>
+    40% à la commande — 50% en cours de travaux<br>
+    Le solde à la terminaison des travaux, Payable à réception
+    {% if entreprise.iban %}<br><strong>IBAN : {{ entreprise.iban }}</strong>{% endif %}
+    {% if entreprise.bic %} &nbsp; <strong>BIC : {{ entreprise.bic }}</strong>{% endif %}
+  </div>
+
+  <!-- ── SIGNATURE 2 COLONNES ── -->
+  <div class="signature-grid">
+    <!-- Gauche : client -->
+    <div class="sig-col">
+      <div class="sig-title">Pour le client</div>
+      <div class="sig-box-client">
+        <div class="sig-mention">Mention "Lu et approuvé", date et signature</div>
+        <div class="sig-accord">Pour accord y inclus les conditions ci-dessous</div>
+      </div>
+    </div>
+    <!-- Droite : gérant (nom + prénom seulement) -->
+    <div class="sig-col">
+      <div class="sig-title">Pour l'entreprise</div>
+      <div class="sig-box-gerant">
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px;">Le gérant</div>
+        <div class="sig-gerant-nom">{{ entreprise.dirigeant }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <div class="footer">
+    {{ entreprise.nom }}
+    {% if entreprise.adresse %} — {{ entreprise.adresse }}{% endif %}
+    {% if entreprise.siret %} — SIRET : {{ entreprise.siret }}{% endif %}
+    {% if entreprise.forme %} — {{ entreprise.forme }}{% endif %}
+    {% if entreprise.capital %} — Capital : {{ entreprise.capital }}{% endif %}
+    {% if entreprise.activite %} — APE : {{ entreprise.activite }}{% endif %}
+  </div>
+
+</div>
+</body>
+</html>

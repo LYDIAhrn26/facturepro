@@ -1,0 +1,8 @@
+flask
+flask-sqlalchemy
+flask-bcrypt
+flask-mail
+pymysql
+pdfkit
+cryptography
+gunicorn

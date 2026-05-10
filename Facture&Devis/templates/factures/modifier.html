@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% block title %}Modifier {{ facture.numero_facture }} — FacturePro{% endblock %}
+{% block page_title %}Modifier la facture{% endblock %}
+
+{% block extra_css %}
+<style>
+  .facture-layout { display: grid; grid-template-columns: 1fr 300px; gap: 18px; align-items: start; }
+  .company-box { background: linear-gradient(135deg, var(--indigo-bg), var(--violet-bg)); border: 1px solid rgba(99,102,241,.2); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+  .company-box-title { font-size: 9px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--indigo); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+  .company-info-row { display: flex; gap: 8px; font-size: 11px; color: var(--gray2); margin-bottom: 3px; }
+  .company-info-row strong { color: var(--dark); min-width: 65px; flex-shrink: 0; }
+  .lines-header { display: grid; grid-template-columns: 3fr 1.2fr .6fr 1fr 1fr 34px; gap: 6px; font-size: 9px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--gray); padding-bottom: 7px; border-bottom: 2px solid var(--indigo-bg); margin-bottom: 6px; }
+  .line-row { display: grid; grid-template-columns: 3fr 1.2fr .6fr 1fr 1fr 34px; gap: 6px; align-items: center; margin-bottom: 7px; animation: fadeIn .2s ease; }
+  .line-inp { background: #f8faff; border: 1.5px solid var(--bdr); border-radius: 6px; padding: 6px 8px; font-size: 11px; color: var(--dark); font-family: var(--fn); outline: none; width: 100%; transition: border-color .2s; }
+  .line-inp:focus { border-color: var(--indigo); background: #fff; }
+  .line-total { font-size: 11px; font-weight: 600; color: var(--indigo); font-family: var(--mono); text-align: right; }
+  .statut-btn { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; border: 1.5px solid var(--bdr); background: transparent; color: var(--gray2); font-family: var(--fn); transition: all .2s; width: 100%; margin-bottom: 6px; }
+  .statut-btn.on-orange { border-color: var(--orange); background: var(--orange-bg); color: var(--orange-txt); }
+  .statut-btn.on-green  { border-color: var(--green);  background: var(--green-bg);  color: var(--green-txt); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Modifier la facture</h1>
+    <div class="page-subtitle" style="display:flex;align-items:center;gap:8px;">
+      <span class="ref-tag">{{ facture.numero_facture }}</span>
+    </div>
+  </div>
+  <div class="page-header-right">
+    <a href="{{ url_for('voir_facture', id=facture.id) }}" class="btn btn-outline">
+      <i class="ti ti-arrow-left"></i> Annuler
+    </a>
+    <button type="submit" form="modifForm" class="btn btn-primary">
+      <i class="ti ti-device-floppy"></i> Enregistrer les modifications
+    </button>
+  </div>
+</div>
+
+<form method="POST" action="{{ url_for('modifier_facture', id=facture.id) }}" id="modifForm">
+
+<div class="facture-layout">
+
+  <!-- Colonne gauche -->
+  <div>
+    <div class="company-box">
+      <div class="company-box-title"><i class="ti ti-building-store"></i> Votre entreprise</div>
+      <div class="company-info-row"><strong>Nom</strong>{{ entreprise.nom or '—' }}</div>
+      <div class="company-info-row"><strong>SIRET</strong>{{ entreprise.siret or '—' }}</div>
+      <div class="company-info-row"><strong>IBAN</strong>{{ entreprise.iban or '—' }}</div>
+    </div>
+
+    <!-- Client -->
+    <div class="form-panel">
+      <div class="form-section-title"><i class="ti ti-user"></i> Informations client</div>
+      <div class="form-grid">
+        <div class="form-group col-span-2">
+          <label class="form-label">Nom / Société *</label>
+          <input class="form-control" type="text" name="client_nom"
+                 value="{{ facture.client_nom or '' }}" required oninput="updateResume()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-control" type="email" name="client_email"
+                 value="{{ facture.client_email or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Téléphone</label>
+          <input class="form-control" type="tel" name="client_tel"
+                 value="{{ facture.client_telephone or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date d'émission *</label>
+          <input class="form-control" type="date" name="date_emission"
+                 value="{{ facture.date_emission.strftime('%Y-%m-%d') if facture.date_emission else '' }}"
+                 required oninput="updateResume()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date d'échéance</label>
+          <input class="form-control" type="date" name="date_echeance"
+                 value="{{ facture.date_echeance.strftime('%Y-%m-%d') if facture.date_echeance else '' }}"
+                 oninput="updateResume()">
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Adresse</label>
+          <input class="form-control" type="text" name="client_adresse"
+                 value="{{ facture.client_adresse or '' }}">
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Conditions de paiement</label>
+          <select class="form-control" name="cond_paiement">
+            {% for opt in ['30 jours après facturation','15 jours','À réception','60 jours','40% commande — 50% travaux — Solde à réception'] %}
+            <option value="{{ opt }}" {% if facture.conditions_paiement == opt %}selected{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lignes -->
+    <div class="form-panel">
+      <div class="form-section-title"><i class="ti ti-list"></i> Lignes de prestation</div>
+      <div class="lines-header">
+        <span>Description</span><span>Unité</span>
+        <span style="text-align:center;">Qté</span>
+        <span style="text-align:right;">Prix HT</span>
+        <span style="text-align:right;">Total HT</span>
+        <span></span>
+      </div>
+      <div id="linesContainer"></div>
+      <div id="hiddenLines"></div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="addLine()" style="margin-top:6px;">
+        <i class="ti ti-plus"></i> Ajouter une ligne
+      </button>
+
+      <div class="total-box" style="margin-top:14px;">
+        <div class="total-row"><span>Sous-total HT</span><span id="outHT" style="font-family:var(--mono);">0,00 €</span></div>
+        <div class="total-row">
+          <span style="display:flex;align-items:center;gap:8px;">
+            TVA
+            <input type="number" name="tva" id="tvaInput" value="{{ facture.tva|int }}"
+                   min="0" max="100" step="0.5"
+                   style="width:62px;background:transparent;border:1.5px solid rgba(99,102,241,.3);border-radius:5px;padding:3px 6px;font-size:11px;text-align:center;font-family:var(--fn);"
+                   oninput="calcTotals()">
+            <span style="font-size:11px;color:var(--gray);">%</span>
+          </span>
+          <span id="outTVA" style="font-family:var(--mono);">0,00 €</span>
+        </div>
+        <div class="total-row total-final"><span>Total TTC</span><span id="outTTC">0,00 €</span></div>
+      </div>
+
+      <input type="hidden" name="montant_ht"  id="hiddenHT">
+      <input type="hidden" name="montant_ttc" id="hiddenTTC">
+
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label">Remarques / RIB</label>
+        <textarea class="form-control" name="remarques" rows="2">{{ facture.remarques or '' }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Colonne droite -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <!-- Statut -->
+    <div class="panel">
+      <div class="panel-title"><i class="ti ti-credit-card" style="color:var(--indigo);"></i> Statut paiement</div>
+      <button type="button" id="btnAttente"
+              class="statut-btn {% if facture.statut_paiement == 'EN_ATTENTE' %}on-orange{% endif %}"
+              onclick="setStatut('EN_ATTENTE')">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--orange);flex-shrink:0;"></span>
+        En attente
+      </button>
+      <button type="button" id="btnPayee"
+              class="statut-btn {% if facture.statut_paiement == 'PAYEE' %}on-green{% endif %}"
+              onclick="setStatut('PAYEE')">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;"></span>
+        Payée
+        <i class="ti ti-check" style="margin-left:auto;color:var(--green);font-size:14px;"></i>
+      </button>
+      <input type="hidden" name="statut_paiement" id="statutInput" value="{{ facture.statut_paiement }}">
+    </div>
+
+    <!-- Résumé -->
+    <div class="panel">
+      <div class="panel-title"><i class="ti ti-info-circle" style="color:var(--indigo);"></i> Résumé</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--gray);">Référence</span>
+          <span class="ref-tag">{{ facture.numero_facture }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--gray);">Client</span>
+          <span id="rClient" style="font-weight:500;color:var(--dark);">{{ facture.client_nom }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--gray);">Émission</span>
+          <span id="rDate">{{ facture.date_emission.strftime('%d/%m/%Y') if facture.date_emission else '—' }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--gray);">Échéance</span>
+          <span id="rEch">{{ facture.date_echeance.strftime('%d/%m/%Y') if facture.date_echeance else '—' }}</span>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--bdr);">
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--gray);">Total HT</span>
+          <span id="rHT" style="font-family:var(--mono);">{{ "%.2f"|format(facture.montant_ht|float) }} €</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--gray);">TVA</span>
+          <span id="rTVA" style="font-family:var(--mono);">{{ "%.2f"|format(facture.montant_tva|float) }} €</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;">
+          <span style="color:var(--dark);">Total TTC</span>
+          <span id="rTTC" style="color:var(--indigo);font-family:var(--mono);">{{ "%.2f"|format(facture.montant_ttc|float) }} €</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      <button type="submit" form="modifForm" class="btn btn-primary" style="width:100%;justify-content:center;">
+        <i class="ti ti-device-floppy"></i> Enregistrer les modifications
+      </button>
+      <a href="{{ url_for('voir_facture', id=facture.id) }}" class="btn btn-outline" style="width:100%;justify-content:center;">
+        <i class="ti ti-x"></i> Annuler
+      </a>
+    </div>
+  </div>
+
+</div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  var fmt = function(v) {
+    return parseFloat(v||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+  };
+
+  var lines = [
+    {% for ligne in facture.lignes %}
+    { id: {{ loop.index0 }}, desc: {{ ligne.description|tojson }}, unite: {{ (ligne.type_service or 'Ens.')|tojson }}, qty: {{ ligne.quantite|float }}, pu: {{ ligne.prix_unitaire_ht|float }} },
+    {% endfor %}
+  ];
+  var lineId = lines.length;
+
+  function addLine() { lines.push({id:lineId++,desc:'',unite:'Ens.',qty:1,pu:0}); renderLines(); }
+  function removeLine(id) { lines=lines.filter(function(l){return l.id!==id;}); renderLines(); calcTotals(); }
+
+  function renderLines() {
+    var c = document.getElementById('linesContainer'); c.innerHTML = '';
+    lines.forEach(function(l) {
+      var r = document.createElement('div'); r.className = 'line-row';
+      r.innerHTML =
+        '<input class="line-inp" placeholder="Description..." value="'+(l.desc||'')+'" oninput="updateField('+l.id+',\'desc\',this.value)">'+
+        '<input class="line-inp" placeholder="Ens./M²..." value="'+(l.unite||'Ens.')+'" style="text-align:center;" oninput="updateField('+l.id+',\'unite\',this.value)">'+
+        '<input class="line-inp" type="number" min="0" step="0.01" value="'+l.qty+'" style="text-align:center;" oninput="updateField('+l.id+',\'qty\',parseFloat(this.value)||0)">'+
+        '<input class="line-inp" type="number" min="0" step="0.01" value="'+(l.pu||'')+'" placeholder="0,00" style="text-align:right;" oninput="updateField('+l.id+',\'pu\',parseFloat(this.value)||0)">'+
+        '<div class="line-total" id="lt-'+l.id+'">'+fmt(l.qty*l.pu)+'</div>'+
+        '<button type="button" class="btn btn-danger btn-sm" onclick="removeLine('+l.id+')" style="padding:4px 7px;"><i class="ti ti-trash"></i></button>';
+      c.appendChild(r);
+    });
+    calcTotals();
+  }
+
+  function updateField(id,field,val) {
+    var l=lines.find(function(x){return x.id===id;}); if(!l)return;
+    l[field]=val;
+    var t=document.getElementById('lt-'+id); if(t)t.textContent=fmt(l.qty*l.pu);
+    calcTotals();
+  }
+
+  function calcTotals() {
+    updateHiddenLines();
+    var ht=lines.reduce(function(s,l){return s+(l.qty*l.pu);},0);
+    var tva=parseFloat(document.getElementById('tvaInput').value)||0;
+    var tvaAmt=ht*tva/100, ttc=ht+tvaAmt;
+    document.getElementById('outHT').textContent=fmt(ht);
+    document.getElementById('outTVA').textContent=fmt(tvaAmt);
+    document.getElementById('outTTC').textContent=fmt(ttc);
+    document.getElementById('hiddenHT').value=ht.toFixed(2);
+    document.getElementById('hiddenTTC').value=ttc.toFixed(2);
+    document.getElementById('rHT').textContent=fmt(ht);
+    document.getElementById('rTVA').textContent=fmt(tvaAmt);
+    document.getElementById('rTTC').textContent=fmt(ttc);
+    lines.forEach(function(l){var e=document.getElementById('lt-'+l.id);if(e)e.textContent=fmt(l.qty*l.pu);});
+  }
+
+  function updateHiddenLines() {
+    var d=document.getElementById('hiddenLines'); d.innerHTML='';
+    lines.forEach(function(l){
+      d.innerHTML+='<input type="hidden" name="ligne_desc[]" value="'+(l.desc||'')+'">'+
+        '<input type="hidden" name="ligne_type[]" value="'+(l.unite||'')+'">'+
+        '<input type="hidden" name="ligne_qty[]" value="'+l.qty+'">'+
+        '<input type="hidden" name="ligne_pu[]" value="'+l.pu+'">';
+    });
+  }
+
+  function updateResume() {
+    var nom=document.querySelector('[name="client_nom"]').value;
+    var de=document.querySelector('[name="date_emission"]').value;
+    var ec=document.querySelector('[name="date_echeance"]').value;
+    document.getElementById('rClient').textContent=nom||'—';
+    document.getElementById('rDate').textContent=de?new Date(de+'T00:00:00').toLocaleDateString('fr-FR'):'—';
+    document.getElementById('rEch').textContent=ec?new Date(ec+'T00:00:00').toLocaleDateString('fr-FR'):'—';
+  }
+
+  function setStatut(s) {
+    document.getElementById('statutInput').value=s;
+    document.getElementById('btnAttente').className='statut-btn'+(s==='EN_ATTENTE'?' on-orange':'');
+    document.getElementById('btnPayee').className='statut-btn'+(s==='PAYEE'?' on-green':'');
+  }
+
+  if(lines.length===0) addLine(); else renderLines();
+  calcTotals();
+</script>
+{% endblock %}
