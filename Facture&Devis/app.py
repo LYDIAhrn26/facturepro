@@ -5,6 +5,8 @@ from models import generate_numero_devis, generate_numero_facture
 from datetime import datetime, date
 import os
 import secrets
+import pymysql
+pymysql.install_as_MySQLdb()
 try:
     import pdfkit
     import shutil
@@ -31,7 +33,11 @@ app.config['MAIL_DEFAULT_SENDER'] = ('FacturePro', 'harounelydia2000@gmail.com')
 mail = Mail(app)
 
 # ─── Config MySQL WAMP ────────────────────────────────────────────────────────
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:@localhost:3306/gl_global')
+db_url = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:@localhost:3306/gl_global')
+# Forcer pymysql comme driver
+if db_url and 'mysql://' in db_url and 'pymysql' not in db_url:
+    db_url = db_url.replace('mysql://', 'mysql+pymysql://')
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
