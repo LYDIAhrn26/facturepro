@@ -5,8 +5,15 @@ from models import generate_numero_devis, generate_numero_facture
 from datetime import datetime, date
 import os
 import secrets
-import pdfkit
-PDFKIT_CONFIG = pdfkit.configuration(wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe")
+try:
+    import pdfkit
+    import shutil
+    wkhtmltopdf_path = shutil.which('wkhtmltopdf') or r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+    PDFKIT_CONFIG = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
+    PDF_AVAILABLE = True
+except Exception:
+    PDF_AVAILABLE = False
+    PDFKIT_CONFIG = None
 
 app = Flask(__name__)
 app.secret_key = 'gl_global_secret_key_2026'
