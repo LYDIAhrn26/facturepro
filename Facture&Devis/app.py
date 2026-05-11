@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
-from flask_mail import Mail, Message
+import resend
 from models import db, bcrypt, Utilisateur, Entreprise, Client, Devis, Facture, LigneFacture, LigneDevis, Notification
 from models import generate_numero_devis, generate_numero_facture
 from datetime import datetime, date
@@ -189,44 +189,44 @@ def register():
             # Envoyer l'email d'activation
             lien = url_for('activer_compte', token=token, _external=True)
             try:
-                msg = Message(
-                    subject='✅ Activez votre compte FacturePro',
-                    recipients=[email]
-                )
-                msg.html = f'''
+                html_content = f'''
                 <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
-                  <div style="background:linear-gradient(135deg,#1e1b4b,#4f46e5);padding:28px 32px;text-align:center;">
+                  <div style="background:#4f46e5;padding:28px 32px;text-align:center;">
                     <h1 style="color:#fff;font-size:24px;margin:0;">FacturePro</h1>
                     <p style="color:rgba(255,255,255,.75);margin:6px 0 0;font-size:13px;">Gestion de devis et factures</p>
                   </div>
                   <div style="padding:32px;">
-                    <h2 style="color:#1e1b4b;font-size:20px;margin-bottom:12px;">Bonjour {prenom_gerant} {nom_gerant} 👋</h2>
+                    <h2 style="color:#1e1b4b;font-size:20px;margin-bottom:12px;">Bonjour {prenom_gerant} {nom_gerant} !</h2>
                     <p style="color:#475569;font-size:14px;line-height:1.7;margin-bottom:24px;">
-                      Merci de vous être inscrit sur <strong>FacturePro</strong> avec votre entreprise <strong>{nom_entreprise}</strong>.<br>
-                      Pour activer votre compte et accéder à votre espace, cliquez sur le bouton ci-dessous :
+                      Merci de vous etre inscrit sur FacturePro avec votre entreprise {nom_entreprise}.<br>
+                      Pour activer votre compte, cliquez sur le bouton ci-dessous :
                     </p>
                     <div style="text-align:center;margin:28px 0;">
-                      <a href="{lien}" style="background-color:#6366f1;color:#ffffff !important;padding:16px 36px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:700;display:inline-block;border:3px solid #4f46e5;font-family:Arial,sans-serif;">
-                        ✅ Activer mon compte
+                      <a href="{lien}" style="background-color:#6366f1;color:#ffffff;padding:16px 36px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:700;display:inline-block;">
+                        Activer mon compte
                       </a>
                     </div>
                     <p style="color:#94a3b8;font-size:12px;text-align:center;">
-                      Ce lien est valable 24h. Si vous n'avez pas créé de compte, ignorez cet email.
+                      Ce lien est valable 24h.
                     </p>
-                  </div>
-                  <div style="background:#f8fafc;padding:16px 32px;text-align:center;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;">
-                    FacturePro — La facturation simplifiée pour tous les professionnels
                   </div>
                 </div>
                 '''
                 print(f"📧 Envoi email vers : {email}")
                 print(f"🔗 Lien activation : {lien}")
-                mail.send(msg)
+                params = {
+                    'from': MAIL_FROM,
+                    'to': [email],
+                    'subject': 'Activez votre compte FacturePro',
+                    'html': html_content,
+                }
+                resend.Emails.send(params)
                 print("✅ Email envoyé avec succès !")
                 flash(f"Un email d'activation a été envoyé à {email}. Vérifiez votre boîte mail !", 'info')
             except Exception as e:
                 print(f"❌ ERREUR EMAIL : {str(e)}")
-                flash(f"Erreur envoi email : {str(e)}", 'error')
+                # Email échoué — on affiche le lien directement sur la page
+                flash(f"Email non envoyé. Utilisez ce lien pour activer votre compte !", 'warning')
 
             return redirect(url_for('attente_activation', email=email, token=token))
 
@@ -705,44 +705,39 @@ def envoyer_devis(id):
         html = render_template('devis/pdf_devis.html', devis=devis, entreprise=entreprise)
         pdf_bytes = pdfkit.from_string(html, False, configuration=PDFKIT_CONFIG)
 
-        # Envoyer l'email avec PDF joint
-        msg = Message(
-            subject=f"Devis {devis.numero_devis} — {entreprise.get('nom','')}",
-            recipients=[devis.client_email]
-        )
-        msg.html = f"""
+        # Envoyer l'email avec Resend
+        import base64
+        html_devis = f'''
         <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;">
-          <div style="background:linear-gradient(135deg,#1e1b4b,#4f46e5);padding:24px 28px;border-radius:10px 10px 0 0;">
+          <div style="background:#4f46e5;padding:24px 28px;border-radius:10px 10px 0 0;">
             <h2 style="color:#fff;margin:0;font-size:20px;">Devis {devis.numero_devis}</h2>
-            <p style="color:rgba(255,255,255,.7);margin:4px 0 0;font-size:13px;">{entreprise.get('nom','')}</p>
+            <p style="color:rgba(255,255,255,.7);margin:4px 0 0;font-size:13px;">{entreprise.get("nom","")}</p>
           </div>
           <div style="padding:28px;background:#fff;border:1px solid #e2e8f0;border-top:none;">
             <p style="color:#475569;font-size:14px;line-height:1.7;">Bonjour,</p>
             <p style="color:#475569;font-size:14px;line-height:1.7;">
               Veuillez trouver ci-joint votre devis <strong>{devis.numero_devis}</strong>
-              d'un montant de <strong>{float(devis.montant_ttc):.2f} € TTC</strong>.
-            </p>
-            <p style="color:#475569;font-size:14px;line-height:1.7;">
-              Pour l'accepter, veuillez imprimer le document, inscrire la mention
-              <strong>"Bon pour accord"</strong>, le dater et le signer, puis nous le retourner.
+              d un montant de <strong>{float(devis.montant_ttc):.2f} EUR TTC</strong>.
             </p>
             <p style="color:#475569;font-size:14px;line-height:1.7;">
               Cordialement,<br>
-              <strong>{entreprise.get('dirigeant','')}</strong><br>
-              {entreprise.get('nom','')}
+              <strong>{entreprise.get("dirigeant","")}</strong><br>
+              {entreprise.get("nom","")}
             </p>
           </div>
-          <div style="background:#f8fafc;padding:12px 28px;text-align:center;font-size:11px;color:#94a3b8;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;">
-            {entreprise.get('nom','')} — {entreprise.get('adresse','')}
-          </div>
         </div>
-        """
-        msg.attach(
-            f"{devis.numero_devis}.pdf",
-            'application/pdf',
-            pdf_bytes
-        )
-        mail.send(msg)
+        '''
+        params = {
+            "from": MAIL_FROM,
+            "to": [devis.client_email],
+            "subject": f"Devis {devis.numero_devis} — {entreprise.get('nom','')}",
+            "html": html_devis,
+            "attachments": [{
+                "filename": f"{devis.numero_devis}.pdf",
+                "content": list(pdf_bytes),
+            }]
+        }
+        resend.Emails.send(params)
         flash(f"Devis {devis.numero_devis} envoyé à {devis.client_email} avec succès !", 'success')
 
     except Exception as e:
@@ -989,42 +984,41 @@ def envoyer_facture(id):
         html = render_template('factures/pdf_facture.html', facture=facture, entreprise=entreprise)
         pdf_bytes = pdfkit.from_string(html, False, configuration=PDFKIT_CONFIG)
 
-        msg = Message(
-            subject=f"Facture {facture.numero_facture} — {entreprise.get('nom','')}",
-            recipients=[facture.client_email]
-        )
-        msg.html = f"""
+        # Envoyer avec Resend
+        html_facture = f'''
         <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;">
-          <div style="background:linear-gradient(135deg,#1e1b4b,#4f46e5);padding:24px 28px;border-radius:10px 10px 0 0;">
+          <div style="background:#4f46e5;padding:24px 28px;border-radius:10px 10px 0 0;">
             <h2 style="color:#fff;margin:0;font-size:20px;">Facture {facture.numero_facture}</h2>
-            <p style="color:rgba(255,255,255,.7);margin:4px 0 0;font-size:13px;">{entreprise.get('nom','')}</p>
+            <p style="color:rgba(255,255,255,.7);margin:4px 0 0;font-size:13px;">{entreprise.get("nom","")}</p>
           </div>
           <div style="padding:28px;background:#fff;border:1px solid #e2e8f0;border-top:none;">
             <p style="color:#475569;font-size:14px;line-height:1.7;">Bonjour,</p>
             <p style="color:#475569;font-size:14px;line-height:1.7;">
               Veuillez trouver ci-joint votre facture <strong>{facture.numero_facture}</strong>
-              d'un montant de <strong>{float(facture.montant_ttc):.2f} € TTC</strong>.
+              d un montant de <strong>{float(facture.montant_ttc):.2f} EUR TTC</strong>.
             </p>
             <p style="color:#475569;font-size:14px;line-height:1.7;">
               Conditions de paiement : <strong>{facture.conditions_paiement}</strong>
             </p>
             <p style="color:#475569;font-size:14px;line-height:1.7;">
               Cordialement,<br>
-              <strong>{entreprise.get('dirigeant','')}</strong><br>
-              {entreprise.get('nom','')}
+              <strong>{entreprise.get("dirigeant","")}</strong><br>
+              {entreprise.get("nom","")}
             </p>
           </div>
-          <div style="background:#f8fafc;padding:12px 28px;text-align:center;font-size:11px;color:#94a3b8;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;">
-            {entreprise.get('nom','')} — {entreprise.get('adresse','')}
-          </div>
         </div>
-        """
-        msg.attach(
-            f"{facture.numero_facture}.pdf",
-            'application/pdf',
-            pdf_bytes
-        )
-        mail.send(msg)
+        '''
+        params = {
+            "from": MAIL_FROM,
+            "to": [facture.client_email],
+            "subject": f"Facture {facture.numero_facture} — {entreprise.get('nom','')}",
+            "html": html_facture,
+            "attachments": [{
+                "filename": f"{facture.numero_facture}.pdf",
+                "content": list(pdf_bytes),
+            }]
+        }
+        resend.Emails.send(params)
         flash(f"Facture {facture.numero_facture} envoyée à {facture.client_email} avec succès !", 'success')
 
     except Exception as e:
