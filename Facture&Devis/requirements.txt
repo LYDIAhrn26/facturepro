@@ -1,7 +1,7 @@
 flask
 flask-sqlalchemy
 flask-bcrypt
-flask-mail
+resend
 pymysql
 pdfkit
 cryptography
