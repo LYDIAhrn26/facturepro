@@ -32,7 +32,6 @@ app.config['MAIL_PASSWORD']       = os.environ.get('MAIL_PASSWORD', 'befhtevajlk
 app.config['MAIL_DEFAULT_SENDER'] = ('FacturePro', os.environ.get('MAIL_USERNAME', 'harounelydia2000@gmail.com'))
 app.config['MAIL_TIMEOUT']        = 10
 
-mail = Mail(app)
 
 # ─── Config MySQL WAMP ────────────────────────────────────────────────────────
 db_url = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:@localhost:3306/gl_global')
