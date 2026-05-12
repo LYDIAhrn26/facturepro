@@ -159,31 +159,38 @@ def register():
                 logo_path = 'uploads/logo_entreprise.' + ext
 
         if not errors:
-            adresse_complete = adresse
-            if code_postal or ville:
-                adresse_complete = f"{adresse}, {code_postal} {ville}".strip(', ')
+            try:
+                adresse_complete = adresse
+                if code_postal or ville:
+                    adresse_complete = f"{adresse}, {code_postal} {ville}".strip(', ')
 
-            # Générer un token unique
-            token = secrets.token_urlsafe(32)
+                # Générer un token unique
+                token = secrets.token_urlsafe(32)
 
-            # Créer le compte (inactif)
-            user = Utilisateur(
-                prenom=prenom_gerant, nom=nom_gerant,
-                email=email, is_active=False, token_activation=token
-            )
-            user.set_password(password)
-            db.session.add(user)
-            db.session.flush()
+                # Créer le compte (inactif)
+                user = Utilisateur(
+                    prenom=prenom_gerant, nom=nom_gerant,
+                    email=email, is_active=False, token_activation=token
+                )
+                user.set_password(password)
+                db.session.add(user)
+                db.session.flush()
 
-            entreprise = Entreprise(
-                utilisateur_id=user.id, nom=nom_entreprise,
-                forme_juridique=forme_juridique, siret=siret, siren=siren,
-                capital=capital + ' €' if capital else '', activite=activite,
-                adresse=adresse_complete, email=email, telephone=telephone,
-                iban=iban, bic=bic, logo=logo_path,
-            )
-            db.session.add(entreprise)
-            db.session.commit()
+                entreprise = Entreprise(
+                    utilisateur_id=user.id, nom=nom_entreprise,
+                    forme_juridique=forme_juridique, siret=siret, siren=siren,
+                    capital=capital + ' €' if capital else '', activite=activite,
+                    adresse=adresse_complete, email=email, telephone=telephone,
+                    iban=iban, bic=bic, logo=logo_path,
+                )
+                db.session.add(entreprise)
+                db.session.commit()
+                print(f"✅ Compte créé pour {email}")
+            except Exception as db_error:
+                db.session.rollback()
+                print(f"❌ ERREUR BDD : {str(db_error)}")
+                errors['general'] = f"Erreur lors de la création du compte : {str(db_error)}"
+                return render_template('register.html', errors=errors, form=request.form)
 
             # Envoyer l'email d'activation
             lien = url_for('activer_compte', token=token, _external=True)
