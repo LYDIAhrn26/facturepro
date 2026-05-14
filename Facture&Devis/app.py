@@ -220,13 +220,19 @@ def register():
                 '''
                 print(f"📧 Envoi email vers : {email}")
                 print(f"🔗 Lien activation : {lien}")
-                params = {
-                    'from': MAIL_FROM,
-                    'to': [email],
-                    'subject': 'Activez votre compte FacturePro',
-                    'html': html_content,
-                }
-                resend.Emails.send(params)
+                import smtplib
+                from email.mime.multipart import MIMEMultipart
+                from email.mime.text import MIMEText
+                msg_mime = MIMEMultipart('alternative')
+                msg_mime['Subject'] = 'Activez votre compte FacturePro'
+                msg_mime['From']    = MAIL_FROM
+                msg_mime['To']      = email
+                msg_mime.attach(MIMEText(html_content, 'html'))
+                with smtplib.SMTP('smtp.gmail.com', 587, timeout=30) as srv:
+                    srv.ehlo()
+                    srv.starttls()
+                    srv.login(MAIL_FROM_ADDR, MAIL_PASSWORD)
+                    srv.sendmail(MAIL_FROM_ADDR, [email], msg_mime.as_string())
                 print("✅ Email envoyé avec succès !")
                 flash(f"Un email d'activation a été envoyé à {email}. Vérifiez votre boîte mail !", 'info')
             except Exception as e:
