@@ -5,922 +5,289 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Créer mon compte — FacturePro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
   <style>
-    /* ── Page register ── */
-    .register-page {
+    :root {
+      --indigo: #4f46e5; --indigo-d: #3730a3;
+      --dark: #0f0e1a; --gray: #64748b;
+      --light: #f8fafc; --bdr: #e2e8f0;
+      --red: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: linear-gradient(135deg, #0f0e1a 0%, #1e1b4b 50%, #312e81 100%);
       min-height: 100vh;
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 40px 16px 60px;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 40px 16px;
     }
-
-    /* Header */
-    .register-header {
-      text-align: center;
-      margin-bottom: 32px;
+    .container { width: 100%; max-width: 700px; }
+    .header { text-align: center; margin-bottom: 28px; }
+    .logo {
+      display: inline-flex; align-items: center; gap: 10px;
+      margin-bottom: 20px; text-decoration: none;
     }
-    .register-logo {
-      width: 56px; height: 56px;
-      background: linear-gradient(135deg, var(--indigo), var(--violet));
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 26px; color: #fff;
-      margin: 0 auto 16px;
-      box-shadow: 0 6px 20px rgba(99,102,241,.35);
+    .logo-icon {
+      width: 44px; height: 44px; background: var(--indigo);
+      border-radius: 12px; display: flex; align-items: center;
+      justify-content: center; font-size: 20px; color: #fff;
     }
-    .register-title {
-      font-size: 24px; font-weight: 600; color: var(--dark); margin-bottom: 6px;
+    .logo-text { font-size: 22px; font-weight: 700; color: #fff; }
+    .header h1 { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .header p  { font-size: 14px; color: rgba(255,255,255,.6); }
+    .card {
+      background: #fff; border-radius: 20px;
+      padding: 36px; box-shadow: 0 25px 60px rgba(0,0,0,.3);
     }
-    .register-subtitle {
+    .section-title {
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--indigo); margin-bottom: 14px; margin-top: 24px;
+      padding-bottom: 8px; border-bottom: 2px solid #eef2ff;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title:first-child { margin-top: 0; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .col-2  { grid-column: span 2; }
+    .field  { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 12px; font-weight: 600; color: #374151; }
+    .field label .req { color: var(--red); }
+    .field input, .field select {
+      height: 44px; border: 1.5px solid var(--bdr);
+      border-radius: 10px; padding: 0 14px;
+      font-size: 14px; font-family: 'DM Sans', sans-serif;
+      color: var(--dark); background: var(--light);
+      transition: border-color .2s, box-shadow .2s; outline: none; width: 100%;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--indigo);
+      box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+      background: #fff;
+    }
+    .field input.error { border-color: var(--red); }
+    .err-msg { font-size: 11px; color: var(--red); }
+    .flash {
+      padding: 12px 16px; border-radius: 10px;
+      font-size: 13px; font-weight: 500; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .flash.error   { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+    .flash.warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+    .flash.info    { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+    .flash.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+    .logo-upload {
+      border: 2px dashed var(--bdr); border-radius: 10px;
+      padding: 18px; text-align: center; cursor: pointer;
+      background: var(--light); transition: border-color .2s;
+    }
+    .logo-upload:hover { border-color: var(--indigo); }
+    .logo-upload input { display: none; }
+    .logo-upload i { font-size: 28px; color: #cbd5e1; }
+    .logo-upload-text { font-size: 12px; color: var(--gray); margin-top: 6px; }
+    #logoPreview img { max-height: 70px; object-fit: contain; border-radius: 8px; }
+    .btn-submit {
+      width: 100%; height: 52px; background: var(--indigo);
+      color: #fff; border: none; border-radius: 12px;
+      font-size: 16px; font-weight: 700;
+      font-family: 'DM Sans', sans-serif; cursor: pointer;
+      margin-top: 24px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      transition: background .2s, transform .15s;
+    }
+    .btn-submit:hover { background: var(--indigo-d); transform: translateY(-1px); }
+    .login-link {
+      text-align: center; margin-top: 18px;
       font-size: 13px; color: var(--gray);
     }
-
-    /* Stepper */
-    .stepper {
-      display: flex; align-items: center; gap: 0;
-      margin-bottom: 32px; width: 100%; max-width: 680px;
+    .login-link a { color: var(--indigo); font-weight: 600; text-decoration: none; }
+    @media (max-width: 600px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .col-2  { grid-column: span 1; }
+      .card   { padding: 24px; }
     }
-    .step {
-      display: flex; flex-direction: column; align-items: center;
-      flex: 1; position: relative;
-    }
-    .step:not(:last-child)::after {
-      content: '';
-      position: absolute; top: 18px; left: calc(50% + 20px);
-      right: calc(-50% + 20px); height: 2px;
-      background: var(--bdr);
-      z-index: 0;
-    }
-    .step.done:not(:last-child)::after { background: var(--indigo); }
-    .step-circle {
-      width: 36px; height: 36px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 600;
-      border: 2px solid var(--bdr);
-      background: var(--surf); color: var(--gray);
-      position: relative; z-index: 1;
-      transition: all .3s;
-    }
-    .step.active .step-circle {
-      background: var(--indigo); border-color: var(--indigo);
-      color: #fff; box-shadow: 0 0 0 4px rgba(99,102,241,.15);
-    }
-    .step.done .step-circle {
-      background: var(--green); border-color: var(--green); color: #fff;
-    }
-    .step-label {
-      font-size: 10px; color: var(--gray); margin-top: 6px;
-      font-weight: 500; text-align: center;
-    }
-    .step.active .step-label { color: var(--indigo); font-weight: 600; }
-    .step.done .step-label   { color: var(--green); }
-
-    /* Formulaire */
-    .register-form {
-      width: 100%; max-width: 680px;
-      background: var(--surf);
-      border: 1px solid var(--bdr);
-      border-radius: 18px;
-      box-shadow: var(--shadow-lg);
-      overflow: hidden;
-    }
-
-    /* Sections */
-    .form-section {
-      display: none;
-      padding: 28px 32px;
-      animation: fadeIn .25s ease;
-    }
-    .form-section.active { display: block; }
-
-    .section-title-big {
-      font-size: 16px; font-weight: 600; color: var(--dark);
-      margin-bottom: 4px; display: flex; align-items: center; gap: 10px;
-    }
-    .section-title-big i {
-      width: 34px; height: 34px; border-radius: 9px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 17px; color: #fff;
-      background: linear-gradient(135deg, var(--indigo), var(--violet));
-    }
-    .section-desc { font-size: 12px; color: var(--gray); margin-bottom: 22px; padding-left: 44px; }
-
-    /* Logo upload */
-    .logo-upload {
-      display: flex; align-items: center; gap: 16px;
-      padding: 16px; background: var(--bg);
-      border: 2px dashed var(--bdr2); border-radius: 10px;
-      cursor: pointer; transition: all .2s;
-      margin-bottom: 14px;
-    }
-    .logo-upload:hover { border-color: var(--indigo); background: var(--indigo-bg); }
-    .logo-preview {
-      width: 56px; height: 56px; border-radius: 10px;
-      background: var(--indigo-bg); border: 1px solid var(--bdr);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px; color: var(--indigo); overflow: hidden; flex-shrink: 0;
-    }
-    .logo-preview img { width: 100%; height: 100%; object-fit: cover; }
-    .logo-upload-text { font-size: 12px; color: var(--gray2); }
-    .logo-upload-text strong { color: var(--indigo); display: block; font-size: 13px; margin-bottom: 2px; }
-    .logo-upload-text span   { font-size: 10px; color: var(--gray); }
-
-    /* Champ erreur */
-    .field-error {
-      font-size: 10px; color: var(--red); margin-top: 4px;
-      display: flex; align-items: center; gap: 4px;
-    }
-    .field-error i { font-size: 12px; }
-    .form-control.has-error { border-color: var(--red); background: var(--red-bg); }
-
-    /* Résumé final */
-    .summary-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-    }
-    .summary-item {
-      background: var(--bg); border: 1px solid var(--bdr);
-      border-radius: 8px; padding: 10px 12px;
-    }
-    .summary-label { font-size: 9px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--gray); margin-bottom: 3px; }
-    .summary-val   { font-size: 12px; color: var(--dark); font-weight: 500; }
-    .summary-val.empty { color: var(--bdr2); font-style: italic; }
-
-    /* Footer navigation */
-    .form-footer {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 20px 32px;
-      border-top: 1px solid var(--bdr);
-      background: #fafbff;
-    }
-
-    /* Lien connexion */
-    .login-link {
-      text-align: center; margin-top: 20px;
-      font-size: 12px; color: var(--gray);
-    }
-    .login-link a { color: var(--indigo); font-weight: 500; }
-
-    /* Password strength */
-    .pwd-strength { margin-top: 6px; }
-    .pwd-bar {
-      height: 4px; border-radius: 99px;
-      background: var(--bdr); overflow: hidden; margin-bottom: 3px;
-    }
-    .pwd-fill { height: 100%; border-radius: 99px; transition: width .3s, background .3s; }
-    .pwd-label { font-size: 10px; color: var(--gray); }
   </style>
 </head>
-<body class="login-body">
-<div class="register-page">
-
-  <!-- Header -->
-  <div class="register-header">
-    <div class="register-logo"><i class="ti ti-building-store"></i></div>
-    <div class="register-title">Créer mon compte entreprise</div>
-    <div class="register-subtitle">Renseignez les coordonnées de votre entreprise — elles apparaîtront sur tous vos devis et factures</div>
+<body>
+<div class="container">
+  <div class="header">
+    <a href="{{ url_for('home') }}" class="logo">
+      <div class="logo-icon"><i class="ti ti-building-store"></i></div>
+      <div class="logo-text">FacturePro</div>
+    </a>
+    <h1>Créer mon compte entreprise</h1>
+    <p>Remplissez le formulaire pour commencer gratuitement</p>
   </div>
 
-  <!-- Stepper -->
-  <div class="stepper" id="stepper">
-    <div class="step active" id="step-1">
-      <div class="step-circle"><i class="ti ti-building-store"></i></div>
-      <div class="step-label">Entreprise</div>
-    </div>
-    <div class="step" id="step-2">
-      <div class="step-circle"><i class="ti ti-user"></i></div>
-      <div class="step-label">Gérant</div>
-    </div>
-    <div class="step" id="step-3">
-      <div class="step-circle"><i class="ti ti-credit-card"></i></div>
-      <div class="step-label">Coordonnées bancaires</div>
-    </div>
-    <div class="step" id="step-4">
-      <div class="step-circle"><i class="ti ti-lock"></i></div>
-      <div class="step-label">Identifiants</div>
-    </div>
-    <div class="step" id="step-5">
-      <div class="step-circle"><i class="ti ti-check"></i></div>
-      <div class="step-label">Confirmation</div>
-    </div>
-  </div>
+  <div class="card">
 
-  <!-- Formulaire principal -->
-  <form class="register-form" method="POST" action="{{ url_for('register') }}"
-        enctype="multipart/form-data" id="registerForm" novalidate>
-
-    <!-- ══ ÉTAPE 1 : Entreprise ══════════════════════════════════════════ -->
-    <div class="form-section active" id="section-1">
-      <div class="section-title-big">
-        <i class="ti ti-building-store"></i> Informations de l'entreprise
-      </div>
-      <div class="section-desc">Ces informations apparaîtront en en-tête de tous vos devis et factures.</div>
-
-      <!-- Logo -->
-      <div class="logo-upload" onclick="document.getElementById('logoInput').click()">
-        <div class="logo-preview" id="logoPreview">
-          <i class="ti ti-photo"></i>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+        <div class="flash {{ category }}">
+          <i class="ti ti-{% if category == 'error' %}alert-circle{% elif category == 'warning' %}alert-triangle{% elif category == 'success' %}circle-check{% else %}info-circle{% endif %}"></i>
+          {{ message }}
         </div>
-        <div class="logo-upload-text">
-          <strong><i class="ti ti-upload"></i> Charger le logo de l'entreprise</strong>
-          <span>PNG, JPG, SVG — max 2 Mo (optionnel)</span>
-        </div>
-        <input type="file" name="logo" id="logoInput" accept=".png,.jpg,.jpeg,.svg,.webp"
-               style="display:none;" onchange="previewLogo(this)">
-      </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
-      <div class="form-grid">
-        <div class="form-group col-span-2">
-          <label class="form-label">Nom de l'entreprise *</label>
-          <input class="form-control {% if errors.nom_entreprise %}has-error{% endif %}"
-                 type="text" name="nom_entreprise" id="nom_entreprise"
-                 placeholder="Nom de votre entreprise"
-                 value="" required>
-          {% if errors.nom_entreprise %}
-          <div class="field-error"><i class="ti ti-alert-circle"></i>{{ errors.nom_entreprise }}</div>
-          {% endif %}
+    {% if errors.general %}
+    <div class="flash error">
+      <i class="ti ti-alert-circle"></i>{{ errors.general }}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('register') }}" enctype="multipart/form-data">
+
+      <!-- ENTREPRISE -->
+      <div class="section-title"><i class="ti ti-building-store"></i> Informations entreprise</div>
+      <div class="grid-2">
+        <div class="field col-2">
+          <label>Nom de l'entreprise <span class="req">*</span></label>
+          <input type="text" name="nom_entreprise" value="{{ form.get('nom_entreprise','') if form else '' }}"
+                 placeholder="Ex : Bâti Pro SARL" class="{{ 'error' if errors.nom_entreprise else '' }}" required>
+          {% if errors.nom_entreprise %}<span class="err-msg">{{ errors.nom_entreprise }}</span>{% endif %}
         </div>
-        <div class="form-group">
-          <label class="form-label">Forme juridique</label>
-          <select class="form-control" name="forme_juridique">
-            <option value="SAS" {% if form and form.forme_juridique == 'SAS' %}selected{% endif %}>SAS</option>
-            <option value="SARL" {% if form and form.forme_juridique == 'SARL' %}selected{% endif %}>SARL</option>
-            <option value="EURL" {% if form and form.forme_juridique == 'EURL' %}selected{% endif %}>EURL</option>
-            <option value="EI"   {% if form and form.forme_juridique == 'EI' %}selected{% endif %}>Entreprise individuelle</option>
-            <option value="SA"   {% if form and form.forme_juridique == 'SA' %}selected{% endif %}>SA</option>
-            <option value="SNC"  {% if form and form.forme_juridique == 'SNC' %}selected{% endif %}>SNC</option>
-            <option value="Autre">Autre</option>
+        <div class="field">
+          <label>Forme juridique</label>
+          <select name="forme_juridique">
+            <option value="">-- Choisir --</option>
+            {% for f in ['Auto-entrepreneur','SARL','SAS','SASU','EURL','SNC','SA','Artisan','Association','Autre'] %}
+            <option value="{{ f }}" {{ 'selected' if form and form.get('forme_juridique') == f else '' }}>{{ f }}</option>
+            {% endfor %}
           </select>
         </div>
-        <div class="form-group">
-          <label class="form-label">Capital social (€)</label>
-          <input class="form-control" type="text" name="capital"
-                 placeholder="5 400" value="">
+        <div class="field">
+          <label>Secteur d'activité</label>
+          <input type="text" name="activite" value="{{ form.get('activite','') if form else '' }}"
+                 placeholder="Ex : BTP, Transport, Conseil...">
         </div>
-        <div class="form-group">
-          <label class="form-label">SIRET * <span style="color:var(--gray);font-weight:400;font-size:9px;">(14 chiffres)</span></label>
-          <input class="form-control {% if errors.siret %}has-error{% endif %}"
-                 type="text" name="siret" id="siretInput"
-                 placeholder="Ex : 12345678900012"
-                 maxlength="17"
-                 value=""
-                 oninput="formatSIRET(this)"
-                 required>
-          <div style="font-size:9px;color:var(--gray);margin-top:3px;">Format : 14 chiffres — ex : 123 456 789 00012</div>
-          {% if errors.siret %}
-          <div class="field-error"><i class="ti ti-alert-circle"></i>{{ errors.siret }}</div>
-          {% endif %}
+        <div class="field">
+          <label>SIRET <span class="req">*</span></label>
+          <input type="text" name="siret" value="{{ form.get('siret','') if form else '' }}"
+                 placeholder="14 chiffres" maxlength="17" class="{{ 'error' if errors.siret else '' }}">
+          {% if errors.siret %}<span class="err-msg">{{ errors.siret }}</span>{% endif %}
         </div>
-        <div class="form-group">
-          <label class="form-label">SIREN <span style="color:var(--gray);font-weight:400;font-size:9px;">(9 chiffres)</span></label>
-          <input class="form-control" type="text" name="siren" id="sirenInput"
-                 placeholder="Ex : 123456789"
-                 maxlength="11"
-                 value=""
-                 oninput="formatSIREN(this)">
-          <div style="font-size:9px;color:var(--gray);margin-top:3px;">Format : 9 chiffres — ex : 123 456 789</div>
+        <div class="field">
+          <label>SIREN</label>
+          <input type="text" name="siren" value="{{ form.get('siren','') if form else '' }}"
+                 placeholder="9 chiffres" maxlength="11">
         </div>
-        <div class="form-group col-span-2">
-          <label class="form-label">Secteur d'activité</label>
-          <input class="form-control" type="text" name="activite"
-                 placeholder="Ex : BTP, Informatique, Restauration..."
-                 value="">
+        <div class="field">
+          <label>Capital social</label>
+          <input type="text" name="capital" value="{{ form.get('capital','') if form else '' }}"
+                 placeholder="Ex : 10 000">
         </div>
-        <div class="form-group col-span-2">
-          <label class="form-label">Adresse du siège social</label>
-          <input class="form-control" type="text" name="adresse"
-                 placeholder="Ex : 12 rue de la Paix"
-                 value="">
+        <div class="field col-2">
+          <label>Adresse</label>
+          <input type="text" name="adresse" value="{{ form.get('adresse','') if form else '' }}"
+                 placeholder="Ex : 12 rue de la Paix">
         </div>
-        <div class="form-group" style="position:relative;">
-          <label class="form-label">Code postal</label>
-          <input class="form-control" type="text" name="code_postal"
-                 id="codePostalInput"
-                 placeholder="Ex : 75001"
-                 autocomplete="off"
-                 oninput="searchCodePostal(this.value)"
-                 value="">
-          <div id="cpSuggestions" style="
-            display:none;position:absolute;top:100%;left:0;right:0;
-            background:#fff;border:1.5px solid var(--indigo);
-            border-radius:0 0 8px 8px;z-index:100;
-            max-height:200px;overflow-y:auto;
-            box-shadow:0 4px 16px rgba(99,102,241,.15);
-          "></div>
+        <div class="field">
+          <label>Code postal</label>
+          <input type="text" name="code_postal" value="{{ form.get('code_postal','') if form else '' }}"
+                 placeholder="Ex : 75001" maxlength="5">
         </div>
-        <div class="form-group">
-          <label class="form-label">Département</label>
-          <select class="form-control" name="ville">
-            <option value="">-- Choisir un département --</option>
-            <option value="01 - Ain" {{ 'selected' if form and form.ville == '01 - Ain' }}>01 - Ain</option>
-            <option value="02 - Aisne" {{ 'selected' if form and form.ville == '02 - Aisne' }}>02 - Aisne</option>
-            <option value="03 - Allier" {{ 'selected' if form and form.ville == '03 - Allier' }}>03 - Allier</option>
-            <option value="04 - Alpes-de-Haute-Provence" {{ 'selected' if form and form.ville == '04 - Alpes-de-Haute-Provence' }}>04 - Alpes-de-Haute-Provence</option>
-            <option value="05 - Hautes-Alpes" {{ 'selected' if form and form.ville == '05 - Hautes-Alpes' }}>05 - Hautes-Alpes</option>
-            <option value="06 - Alpes-Maritimes" {{ 'selected' if form and form.ville == '06 - Alpes-Maritimes' }}>06 - Alpes-Maritimes</option>
-            <option value="07 - Ardèche" {{ 'selected' if form and form.ville == '07 - Ardèche' }}>07 - Ardèche</option>
-            <option value="08 - Ardennes" {{ 'selected' if form and form.ville == '08 - Ardennes' }}>08 - Ardennes</option>
-            <option value="09 - Ariège" {{ 'selected' if form and form.ville == '09 - Ariège' }}>09 - Ariège</option>
-            <option value="10 - Aube" {{ 'selected' if form and form.ville == '10 - Aube' }}>10 - Aube</option>
-            <option value="11 - Aude" {{ 'selected' if form and form.ville == '11 - Aude' }}>11 - Aude</option>
-            <option value="12 - Aveyron" {{ 'selected' if form and form.ville == '12 - Aveyron' }}>12 - Aveyron</option>
-            <option value="13 - Bouches-du-Rhône" {{ 'selected' if form and form.ville == '13 - Bouches-du-Rhône' }}>13 - Bouches-du-Rhône</option>
-            <option value="14 - Calvados" {{ 'selected' if form and form.ville == '14 - Calvados' }}>14 - Calvados</option>
-            <option value="15 - Cantal" {{ 'selected' if form and form.ville == '15 - Cantal' }}>15 - Cantal</option>
-            <option value="16 - Charente" {{ 'selected' if form and form.ville == '16 - Charente' }}>16 - Charente</option>
-            <option value="17 - Charente-Maritime" {{ 'selected' if form and form.ville == '17 - Charente-Maritime' }}>17 - Charente-Maritime</option>
-            <option value="18 - Cher" {{ 'selected' if form and form.ville == '18 - Cher' }}>18 - Cher</option>
-            <option value="19 - Corrèze" {{ 'selected' if form and form.ville == '19 - Corrèze' }}>19 - Corrèze</option>
-            <option value="2A - Corse-du-Sud" {{ 'selected' if form and form.ville == '2A - Corse-du-Sud' }}>2A - Corse-du-Sud</option>
-            <option value="2B - Haute-Corse" {{ 'selected' if form and form.ville == '2B - Haute-Corse' }}>2B - Haute-Corse</option>
-            <option value="21 - Côte-d'Or" {{ 'selected' if form and form.ville == "21 - Côte-d'Or" }}>21 - Côte-d'Or</option>
-            <option value="22 - Côtes-d'Armor" {{ 'selected' if form and form.ville == "22 - Côtes-d'Armor" }}>22 - Côtes-d'Armor</option>
-            <option value="23 - Creuse" {{ 'selected' if form and form.ville == '23 - Creuse' }}>23 - Creuse</option>
-            <option value="24 - Dordogne" {{ 'selected' if form and form.ville == '24 - Dordogne' }}>24 - Dordogne</option>
-            <option value="25 - Doubs" {{ 'selected' if form and form.ville == '25 - Doubs' }}>25 - Doubs</option>
-            <option value="26 - Drôme" {{ 'selected' if form and form.ville == '26 - Drôme' }}>26 - Drôme</option>
-            <option value="27 - Eure" {{ 'selected' if form and form.ville == '27 - Eure' }}>27 - Eure</option>
-            <option value="28 - Eure-et-Loir" {{ 'selected' if form and form.ville == '28 - Eure-et-Loir' }}>28 - Eure-et-Loir</option>
-            <option value="29 - Finistère" {{ 'selected' if form and form.ville == '29 - Finistère' }}>29 - Finistère</option>
-            <option value="30 - Gard" {{ 'selected' if form and form.ville == '30 - Gard' }}>30 - Gard</option>
-            <option value="31 - Haute-Garonne" {{ 'selected' if form and form.ville == '31 - Haute-Garonne' }}>31 - Haute-Garonne</option>
-            <option value="32 - Gers" {{ 'selected' if form and form.ville == '32 - Gers' }}>32 - Gers</option>
-            <option value="33 - Gironde" {{ 'selected' if form and form.ville == '33 - Gironde' }}>33 - Gironde</option>
-            <option value="34 - Hérault" {{ 'selected' if form and form.ville == '34 - Hérault' }}>34 - Hérault</option>
-            <option value="35 - Ille-et-Vilaine" {{ 'selected' if form and form.ville == '35 - Ille-et-Vilaine' }}>35 - Ille-et-Vilaine</option>
-            <option value="36 - Indre" {{ 'selected' if form and form.ville == '36 - Indre' }}>36 - Indre</option>
-            <option value="37 - Indre-et-Loire" {{ 'selected' if form and form.ville == '37 - Indre-et-Loire' }}>37 - Indre-et-Loire</option>
-            <option value="38 - Isère" {{ 'selected' if form and form.ville == '38 - Isère' }}>38 - Isère</option>
-            <option value="39 - Jura" {{ 'selected' if form and form.ville == '39 - Jura' }}>39 - Jura</option>
-            <option value="40 - Landes" {{ 'selected' if form and form.ville == '40 - Landes' }}>40 - Landes</option>
-            <option value="41 - Loir-et-Cher" {{ 'selected' if form and form.ville == '41 - Loir-et-Cher' }}>41 - Loir-et-Cher</option>
-            <option value="42 - Loire" {{ 'selected' if form and form.ville == '42 - Loire' }}>42 - Loire</option>
-            <option value="43 - Haute-Loire" {{ 'selected' if form and form.ville == '43 - Haute-Loire' }}>43 - Haute-Loire</option>
-            <option value="44 - Loire-Atlantique" {{ 'selected' if form and form.ville == '44 - Loire-Atlantique' }}>44 - Loire-Atlantique</option>
-            <option value="45 - Loiret" {{ 'selected' if form and form.ville == '45 - Loiret' }}>45 - Loiret</option>
-            <option value="46 - Lot" {{ 'selected' if form and form.ville == '46 - Lot' }}>46 - Lot</option>
-            <option value="47 - Lot-et-Garonne" {{ 'selected' if form and form.ville == '47 - Lot-et-Garonne' }}>47 - Lot-et-Garonne</option>
-            <option value="48 - Lozère" {{ 'selected' if form and form.ville == '48 - Lozère' }}>48 - Lozère</option>
-            <option value="49 - Maine-et-Loire" {{ 'selected' if form and form.ville == '49 - Maine-et-Loire' }}>49 - Maine-et-Loire</option>
-            <option value="50 - Manche" {{ 'selected' if form and form.ville == '50 - Manche' }}>50 - Manche</option>
-            <option value="51 - Marne" {{ 'selected' if form and form.ville == '51 - Marne' }}>51 - Marne</option>
-            <option value="52 - Haute-Marne" {{ 'selected' if form and form.ville == '52 - Haute-Marne' }}>52 - Haute-Marne</option>
-            <option value="53 - Mayenne" {{ 'selected' if form and form.ville == '53 - Mayenne' }}>53 - Mayenne</option>
-            <option value="54 - Meurthe-et-Moselle" {{ 'selected' if form and form.ville == '54 - Meurthe-et-Moselle' }}>54 - Meurthe-et-Moselle</option>
-            <option value="55 - Meuse" {{ 'selected' if form and form.ville == '55 - Meuse' }}>55 - Meuse</option>
-            <option value="56 - Morbihan" {{ 'selected' if form and form.ville == '56 - Morbihan' }}>56 - Morbihan</option>
-            <option value="57 - Moselle" {{ 'selected' if form and form.ville == '57 - Moselle' }}>57 - Moselle</option>
-            <option value="58 - Nièvre" {{ 'selected' if form and form.ville == '58 - Nièvre' }}>58 - Nièvre</option>
-            <option value="59 - Nord" {{ 'selected' if form and form.ville == '59 - Nord' }}>59 - Nord</option>
-            <option value="60 - Oise" {{ 'selected' if form and form.ville == '60 - Oise' }}>60 - Oise</option>
-            <option value="61 - Orne" {{ 'selected' if form and form.ville == '61 - Orne' }}>61 - Orne</option>
-            <option value="62 - Pas-de-Calais" {{ 'selected' if form and form.ville == '62 - Pas-de-Calais' }}>62 - Pas-de-Calais</option>
-            <option value="63 - Puy-de-Dôme" {{ 'selected' if form and form.ville == '63 - Puy-de-Dôme' }}>63 - Puy-de-Dôme</option>
-            <option value="64 - Pyrénées-Atlantiques" {{ 'selected' if form and form.ville == '64 - Pyrénées-Atlantiques' }}>64 - Pyrénées-Atlantiques</option>
-            <option value="65 - Hautes-Pyrénées" {{ 'selected' if form and form.ville == '65 - Hautes-Pyrénées' }}>65 - Hautes-Pyrénées</option>
-            <option value="66 - Pyrénées-Orientales" {{ 'selected' if form and form.ville == '66 - Pyrénées-Orientales' }}>66 - Pyrénées-Orientales</option>
-            <option value="67 - Bas-Rhin" {{ 'selected' if form and form.ville == '67 - Bas-Rhin' }}>67 - Bas-Rhin</option>
-            <option value="68 - Haut-Rhin" {{ 'selected' if form and form.ville == '68 - Haut-Rhin' }}>68 - Haut-Rhin</option>
-            <option value="69 - Rhône" {{ 'selected' if form and form.ville == '69 - Rhône' }}>69 - Rhône</option>
-            <option value="70 - Haute-Saône" {{ 'selected' if form and form.ville == '70 - Haute-Saône' }}>70 - Haute-Saône</option>
-            <option value="71 - Saône-et-Loire" {{ 'selected' if form and form.ville == '71 - Saône-et-Loire' }}>71 - Saône-et-Loire</option>
-            <option value="72 - Sarthe" {{ 'selected' if form and form.ville == '72 - Sarthe' }}>72 - Sarthe</option>
-            <option value="73 - Savoie" {{ 'selected' if form and form.ville == '73 - Savoie' }}>73 - Savoie</option>
-            <option value="74 - Haute-Savoie" {{ 'selected' if form and form.ville == '74 - Haute-Savoie' }}>74 - Haute-Savoie</option>
-            <option value="75 - Paris" {{ 'selected' if form and form.ville == '75 - Paris' }}>75 - Paris</option>
-            <option value="76 - Seine-Maritime" {{ 'selected' if form and form.ville == '76 - Seine-Maritime' }}>76 - Seine-Maritime</option>
-            <option value="77 - Seine-et-Marne" {{ 'selected' if form and form.ville == '77 - Seine-et-Marne' }}>77 - Seine-et-Marne</option>
-            <option value="78 - Yvelines" {{ 'selected' if form and form.ville == '78 - Yvelines' }}>78 - Yvelines</option>
-            <option value="79 - Deux-Sèvres" {{ 'selected' if form and form.ville == '79 - Deux-Sèvres' }}>79 - Deux-Sèvres</option>
-            <option value="80 - Somme" {{ 'selected' if form and form.ville == '80 - Somme' }}>80 - Somme</option>
-            <option value="81 - Tarn" {{ 'selected' if form and form.ville == '81 - Tarn' }}>81 - Tarn</option>
-            <option value="82 - Tarn-et-Garonne" {{ 'selected' if form and form.ville == '82 - Tarn-et-Garonne' }}>82 - Tarn-et-Garonne</option>
-            <option value="83 - Var" {{ 'selected' if form and form.ville == '83 - Var' }}>83 - Var</option>
-            <option value="84 - Vaucluse" {{ 'selected' if form and form.ville == '84 - Vaucluse' }}>84 - Vaucluse</option>
-            <option value="85 - Vendée" {{ 'selected' if form and form.ville == '85 - Vendée' }}>85 - Vendée</option>
-            <option value="86 - Vienne" {{ 'selected' if form and form.ville == '86 - Vienne' }}>86 - Vienne</option>
-            <option value="87 - Haute-Vienne" {{ 'selected' if form and form.ville == '87 - Haute-Vienne' }}>87 - Haute-Vienne</option>
-            <option value="88 - Vosges" {{ 'selected' if form and form.ville == '88 - Vosges' }}>88 - Vosges</option>
-            <option value="89 - Yonne" {{ 'selected' if form and form.ville == '89 - Yonne' }}>89 - Yonne</option>
-            <option value="90 - Territoire de Belfort" {{ 'selected' if form and form.ville == '90 - Territoire de Belfort' }}>90 - Territoire de Belfort</option>
-            <option value="91 - Essonne" {{ 'selected' if form and form.ville == '91 - Essonne' }}>91 - Essonne</option>
-            <option value="92 - Hauts-de-Seine" {{ 'selected' if form and form.ville == '92 - Hauts-de-Seine' }}>92 - Hauts-de-Seine</option>
-            <option value="93 - Seine-Saint-Denis" {{ 'selected' if form and form.ville == '93 - Seine-Saint-Denis' }}>93 - Seine-Saint-Denis</option>
-            <option value="94 - Val-de-Marne" {{ 'selected' if form and form.ville == '94 - Val-de-Marne' }}>94 - Val-de-Marne</option>
-            <option value="95 - Val-d'Oise" {{ 'selected' if form and form.ville == "95 - Val-d'Oise" }}>95 - Val-d'Oise</option>
-            <option value="971 - Guadeloupe" {{ 'selected' if form and form.ville == '971 - Guadeloupe' }}>971 - Guadeloupe</option>
-            <option value="972 - Martinique" {{ 'selected' if form and form.ville == '972 - Martinique' }}>972 - Martinique</option>
-            <option value="973 - Guyane" {{ 'selected' if form and form.ville == '973 - Guyane' }}>973 - Guyane</option>
-            <option value="974 - La Réunion" {{ 'selected' if form and form.ville == '974 - La Réunion' }}>974 - La Réunion</option>
-            <option value="976 - Mayotte" {{ 'selected' if form and form.ville == '976 - Mayotte' }}>976 - Mayotte</option>
-          </select>
+        <div class="field">
+          <label>Ville</label>
+          <input type="text" name="ville" value="{{ form.get('ville','') if form else '' }}"
+                 placeholder="Ex : Paris">
+        </div>
+        <div class="field">
+          <label>Email professionnel <span class="req">*</span></label>
+          <input type="email" name="email" value="{{ form.get('email','') if form else '' }}"
+                 placeholder="contact@entreprise.fr" class="{{ 'error' if errors.email else '' }}">
+          {% if errors.email %}<span class="err-msg">{{ errors.email }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label>Téléphone</label>
+          <input type="tel" name="telephone" value="{{ form.get('telephone','') if form else '' }}"
+                 placeholder="06 00 00 00 00">
+        </div>
+        <div class="field col-2">
+          <label>Logo <span style="color:var(--gray);font-weight:400;">(optionnel)</span></label>
+          <label class="logo-upload" for="logoInput">
+            <div id="logoPreview"><i class="ti ti-photo"></i></div>
+            <div class="logo-upload-text">Cliquez pour uploader votre logo (PNG, JPG — max 2Mo)</div>
+            <input type="file" id="logoInput" name="logo" accept=".png,.jpg,.jpeg,.svg"
+                   onchange="previewLogo(this)">
+          </label>
         </div>
       </div>
-    </div>
 
-    <!-- ══ ÉTAPE 2 : Gérant ══════════════════════════════════════════════ -->
-    <div class="form-section" id="section-2">
-      <div class="section-title-big">
-        <i class="ti ti-user"></i> Informations du gérant
-      </div>
-      <div class="section-desc">Le nom du gérant apparaîtra sur vos documents et dans l'application.</div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">Prénom du gérant *</label>
-          <input class="form-control {% if errors.nom_gerant %}has-error{% endif %}"
-                 type="text" name="prenom_gerant"
-                 placeholder="Votre prénom" value="">
+      <!-- GÉRANT -->
+      <div class="section-title"><i class="ti ti-user"></i> Informations du gérant</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Prénom <span class="req">*</span></label>
+          <input type="text" name="prenom_gerant" value="{{ form.get('prenom_gerant','') if form else '' }}"
+                 placeholder="Votre prénom" required>
         </div>
-        <div class="form-group">
-          <label class="form-label">Nom du gérant *</label>
-          <input class="form-control {% if errors.nom_gerant %}has-error{% endif %}"
-                 type="text" name="nom_gerant"
-                 placeholder="Votre nom" value="" required>
-          {% if errors.nom_gerant %}
-          <div class="field-error"><i class="ti ti-alert-circle"></i>{{ errors.nom_gerant }}</div>
-          {% endif %}
-        </div>
-        <div class="form-group">
-          <label class="form-label">Email professionnel *</label>
-          <input class="form-control {% if errors.email %}has-error{% endif %}"
-                 type="email" name="email"
-                 placeholder="votre@email.fr"
-                 value="" required>
-          {% if errors.email %}
-          <div class="field-error"><i class="ti ti-alert-circle"></i>{{ errors.email }}</div>
-          {% endif %}
-        </div>
-        <div class="form-group">
-          <label class="form-label">Téléphone</label>
-          <input class="form-control" type="tel" name="telephone"
-                 placeholder="06 00 00 00 00"
-                 value="">
+        <div class="field">
+          <label>Nom <span class="req">*</span></label>
+          <input type="text" name="nom_gerant" value="{{ form.get('nom_gerant','') if form else '' }}"
+                 placeholder="Votre nom" class="{{ 'error' if errors.nom_gerant else '' }}" required>
+          {% if errors.nom_gerant %}<span class="err-msg">{{ errors.nom_gerant }}</span>{% endif %}
         </div>
       </div>
-    </div>
 
-    <!-- ══ ÉTAPE 3 : Coordonnées bancaires ══════════════════════════════ -->
-    <div class="form-section" id="section-3">
-      <div class="section-title-big">
-        <i class="ti ti-credit-card"></i> Coordonnées bancaires
-      </div>
-      <div class="section-desc">Ces informations apparaîtront sur vos factures pour faciliter le paiement par virement. (Optionnel)</div>
-
-      <div class="form-grid">
-        <div class="form-group col-span-2">
-          <label class="form-label">IBAN</label>
-          <input class="form-control" type="text" name="iban"
-                 placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX"
-                 value=""
-                 oninput="formatIBAN(this)">
-          <div style="font-size:10px;color:var(--gray);margin-top:4px;">
-            <i class="ti ti-shield-check" style="color:var(--green);"></i>
-            Ces informations restent confidentielles et ne sont partagées que sur vos factures.
-          </div>
+      <!-- BANCAIRE -->
+      <div class="section-title"><i class="ti ti-credit-card"></i> Informations bancaires <span style="font-size:11px;font-weight:400;color:var(--gray);">(optionnel)</span></div>
+      <div class="grid-2">
+        <div class="field col-2">
+          <label>IBAN</label>
+          <input type="text" name="iban" value="{{ form.get('iban','') if form else '' }}"
+                 placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX">
         </div>
-        <div class="form-group">
-          <label class="form-label">BIC / SWIFT</label>
-          <input class="form-control" type="text" name="bic"
-                 placeholder="CMCIFRPP"
-                 value="">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Banque</label>
-          <input class="form-control" type="text" name="banque"
-                 placeholder="Ex : BNP Paribas, Crédit Agricole..."
-                 value="">
+        <div class="field">
+          <label>BIC</label>
+          <input type="text" name="bic" value="{{ form.get('bic','') if form else '' }}"
+                 placeholder="Ex : BNPAFRPP">
         </div>
       </div>
-    </div>
 
-    <!-- ══ ÉTAPE 4 : Identifiants ════════════════════════════════════════ -->
-    <div class="form-section" id="section-4">
-      <div class="section-title-big">
-        <i class="ti ti-lock"></i> Identifiants de connexion
-      </div>
-      <div class="section-desc">Ces identifiants vous permettront de vous connecter à l'application.</div>
-
-      <div class="form-grid">
-        <div class="form-group col-span-2">
-          <label class="form-label">Email de connexion *</label>
-          <div style="background:var(--indigo-bg);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--indigo2);">
-            <i class="ti ti-info-circle"></i>
-            L'email de connexion sera le même que l'email professionnel saisi à l'étape 2.
-          </div>
+      <!-- MOT DE PASSE -->
+      <div class="section-title"><i class="ti ti-lock"></i> Identifiants de connexion</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Mot de passe <span class="req">*</span></label>
+          <input type="password" name="password" placeholder="Min. 6 caractères"
+                 class="{{ 'error' if errors.password else '' }}" required>
+          {% if errors.password %}<span class="err-msg">{{ errors.password }}</span>{% endif %}
         </div>
-        <div class="form-group">
-          <label class="form-label">Mot de passe *</label>
-          <div style="position:relative;">
-            <input class="form-control {% if errors.password %}has-error{% endif %}"
-                   type="password" name="password" id="password"
-                   placeholder="Minimum 6 caractères"
-                   oninput="checkPasswordStrength(this.value)" required>
-            <button type="button" onclick="togglePwd('password','eyePwd')"
-                    style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);font-size:16px;cursor:pointer;">
-              <i class="ti ti-eye" id="eyePwd"></i>
-            </button>
-          </div>
-          {% if errors.password %}
-          <div class="field-error"><i class="ti ti-alert-circle"></i>{{ errors.password }}</div>
-          {% endif %}
-          <div class="pwd-strength">
-            <div class="pwd-bar"><div class="pwd-fill" id="pwdFill" style="width:0%;background:var(--red);"></div></div>
-            <div class="pwd-label" id="pwdLabel">Saisissez un mot de passe</div>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Confirmer le mot de passe *</label>
-          <div style="position:relative;">
-            <input class="form-control {% if errors.password_confirm %}has-error{% endif %}"
-                   type="password" name="password_confirm" id="password_confirm"
-                   placeholder="Répéter le mot de passe"
-                   oninput="checkPasswordMatch()" required>
-            <button type="button" onclick="togglePwd('password_confirm','eyeConfirm')"
-                    style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);font-size:16px;cursor:pointer;">
-              <i class="ti ti-eye" id="eyeConfirm"></i>
-            </button>
-          </div>
-          {% if errors.password_confirm %}
-          <div class="field-error"><i class="ti ti-alert-circle"></i>{{ errors.password_confirm }}</div>
-          {% endif %}
-          <div class="field-error" id="matchError" style="display:none;">
-            <i class="ti ti-alert-circle"></i> Les mots de passe ne correspondent pas.
-          </div>
+        <div class="field">
+          <label>Confirmer <span class="req">*</span></label>
+          <input type="password" name="password_confirm" placeholder="Répétez le mot de passe"
+                 class="{{ 'error' if errors.password_confirm else '' }}" required>
+          {% if errors.password_confirm %}<span class="err-msg">{{ errors.password_confirm }}</span>{% endif %}
         </div>
       </div>
-    </div>
 
-    <!-- ══ ÉTAPE 5 : Confirmation ════════════════════════════════════════ -->
-    <div class="form-section" id="section-5">
-      <div class="section-title-big">
-        <i class="ti ti-check"></i> Vérification avant création
-      </div>
-      <div class="section-desc">Vérifiez que toutes les informations sont correctes avant de créer votre compte.</div>
-
-      <div class="summary-grid" id="summaryGrid">
-        <!-- Rempli dynamiquement par JS -->
-      </div>
-
-      <div style="margin-top:16px;padding:14px 16px;background:var(--green-bg);border:1px solid rgba(16,185,129,.2);border-radius:10px;font-size:12px;color:var(--green-txt);display:flex;align-items:flex-start;gap:10px;">
-        <i class="ti ti-shield-check" style="font-size:18px;flex-shrink:0;margin-top:1px;"></i>
-        <div>
-          <strong>Vos données sont sécurisées.</strong> Elles sont stockées localement et ne sont jamais partagées avec des tiers. Votre mot de passe sera chiffré lors de l'intégration de la base de données.
-        </div>
-      </div>
-    </div>
-
-    <!-- Footer navigation -->
-    <div class="form-footer">
-      <button type="button" class="btn btn-outline" id="btnPrev"
-              onclick="prevStep()" style="display:none;">
-        <i class="ti ti-arrow-left"></i> Précédent
+      <button type="submit" class="btn-submit">
+        <i class="ti ti-building-store"></i>
+        Créer mon compte entreprise
       </button>
-      <div style="flex:1;"></div>
-      <button type="button" class="btn btn-primary" id="btnNext" onclick="nextStep()">
-        Suivant <i class="ti ti-arrow-right"></i>
-      </button>
-      <button type="button" class="btn btn-primary" id="btnSubmit" style="display:none;"
-              onclick="submitForm();">
-        <i class="ti ti-building-store"></i> Créer mon compte entreprise
-      </button>
+
+    </form>
+
+    <div class="login-link">
+      Déjà un compte ? <a href="{{ url_for('login') }}">Se connecter</a>
     </div>
-
-  </form>
-
-  <!-- Lien connexion -->
-  <div class="login-link">
-    Vous avez déjà un compte ? <a href="{{ url_for('login') }}">Se connecter</a>
   </div>
-
 </div>
 
 <script>
-  var currentStep = 1;
-  var totalSteps  = 5;
-
-  // ── Navigation entre étapes ────────────────────────────────────────────
-  function nextStep() {
-    if (!validateStep(currentStep)) return;
-
-    // Marquer l'étape comme done
-    var stepEl = document.getElementById('step-' + currentStep);
-    stepEl.classList.remove('active');
-    stepEl.classList.add('done');
-    stepEl.querySelector('.step-circle').innerHTML = '<i class="ti ti-check"></i>';
-
-    currentStep++;
-
-    document.getElementById('section-' + (currentStep - 1)).classList.remove('active');
-    document.getElementById('section-' + currentStep).classList.add('active');
-    document.getElementById('step-' + currentStep).classList.add('active');
-
-    document.getElementById('btnPrev').style.display = 'inline-flex';
-
-    if (currentStep === totalSteps) {
-      document.getElementById('btnNext').style.display   = 'none';
-      document.getElementById('btnSubmit').style.display = 'inline-flex';
-      buildSummary();
-    }
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function prevStep() {
-    document.getElementById('section-' + currentStep).classList.remove('active');
-    document.getElementById('step-' + currentStep).classList.remove('active');
-
-    var prevEl = document.getElementById('step-' + currentStep);
-    prevEl.classList.remove('done');
-
-    currentStep--;
-
-    document.getElementById('section-' + currentStep).classList.add('active');
-    document.getElementById('step-' + currentStep).classList.add('active');
-    document.getElementById('step-' + currentStep).classList.remove('done');
-
-    var circle = document.getElementById('step-' + currentStep).querySelector('.step-circle');
-    var icons  = ['ti-building-store','ti-user','ti-credit-card','ti-lock','ti-check'];
-    circle.innerHTML = '<i class="ti ' + icons[currentStep - 1] + '"></i>';
-
-    document.getElementById('btnNext').style.display   = 'inline-flex';
-    document.getElementById('btnSubmit').style.display = 'none';
-    if (currentStep === 1) document.getElementById('btnPrev').style.display = 'none';
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  // ── Validation par étape ───────────────────────────────────────────────
-  function validateStep(step) {
-    if (step === 1) {
-      var nom   = document.getElementById('nom_entreprise').value.trim();
-      var siret = document.querySelector('[name="siret"]').value.trim();
-      if (!nom) {
-        highlight('nom_entreprise', 'Le nom de l\'entreprise est obligatoire.');
-        return false;
-      }
-      if (!siret) {
-        highlight('[name="siret"]', 'Le SIRET est obligatoire.');
-        return false;
-      }
-    }
-    if (step === 2) {
-      var nom   = document.querySelector('[name="nom_gerant"]').value.trim();
-      var email = document.querySelector('[name="email"]').value.trim();
-      if (!nom) {
-        document.querySelector('[name="nom_gerant"]').style.borderColor = 'var(--red)';
-        return false;
-      }
-      if (!email || !email.includes('@')) {
-        document.querySelector('[name="email"]').style.borderColor = 'var(--red)';
-        return false;
-      }
-    }
-    if (step === 4) {
-      var pwd  = document.getElementById('password').value;
-      var pwd2 = document.getElementById('password_confirm').value;
-      if (pwd.length < 6) {
-        document.getElementById('password').style.borderColor = 'var(--red)';
-        return false;
-      }
-      if (pwd !== pwd2) {
-        document.getElementById('matchError').style.display = 'flex';
-        return false;
-      }
-    }
-    return true;
-  }
-
-  function highlight(selector, msg) {
-    var el = selector.startsWith('[')
-      ? document.querySelector(selector)
-      : document.getElementById(selector);
-    if (el) {
-      el.style.borderColor = 'var(--red)';
-      el.focus();
-      el.addEventListener('input', function() { el.style.borderColor = ''; }, { once: true });
-    }
-  }
-
-  // ── Résumé étape 5 ─────────────────────────────────────────────────────
-  function buildSummary() {
-    var fields = [
-      { label: 'Nom entreprise',   val: document.getElementById('nom_entreprise').value },
-      { label: 'Forme juridique',  val: document.querySelector('[name="forme_juridique"]').value },
-      { label: 'SIRET',            val: document.querySelector('[name="siret"]').value },
-      { label: 'SIREN',            val: document.querySelector('[name="siren"]').value },
-      { label: 'Capital',          val: document.querySelector('[name="capital"]').value ? document.querySelector('[name="capital"]').value + ' €' : '' },
-      { label: 'Secteur',          val: document.querySelector('[name="activite"]').value },
-      { label: 'Adresse',          val: document.querySelector('[name="adresse"]').value },
-      { label: 'Ville',            val: document.querySelector('[name="code_postal"]').value + ' ' + document.querySelector('[name="ville"]').value },
-      { label: 'Gérant',           val: document.querySelector('[name="prenom_gerant"]').value + ' ' + document.querySelector('[name="nom_gerant"]').value },
-      { label: 'Email',            val: document.querySelector('[name="email"]').value },
-      { label: 'Téléphone',        val: document.querySelector('[name="telephone"]').value },
-      { label: 'IBAN',             val: document.querySelector('[name="iban"]').value || '—' },
-      { label: 'BIC',              val: document.querySelector('[name="bic"]').value  || '—' },
-    ];
-
-    var grid = document.getElementById('summaryGrid');
-    grid.innerHTML = fields.map(function(f) {
-      return '<div class="summary-item">' +
-        '<div class="summary-label">' + f.label + '</div>' +
-        '<div class="summary-val ' + (!f.val || f.val.trim() === '' ? 'empty' : '') + '">' +
-        (f.val && f.val.trim() ? f.val.trim() : 'Non renseigné') + '</div>' +
-        '</div>';
-    }).join('');
-  }
-
-  // ── Soumission forcée ─────────────────────────────────────────────────
-  function submitForm() {
-    try {
-      var form = document.getElementById('registerForm');
-      console.log('Soumission du formulaire...');
-      form.submit();
-    } catch(e) {
-      console.error('Erreur soumission:', e);
-      alert('Erreur: ' + e.message);
-    }
-  }
-
-  // ── Preview logo ───────────────────────────────────────────────────────
   function previewLogo(input) {
     if (input.files && input.files[0]) {
       var reader = new FileReader();
       reader.onload = function(e) {
-        var preview = document.getElementById('logoPreview');
-        preview.innerHTML = '<img src="' + e.target.result + '" alt="Logo">';
+        document.getElementById('logoPreview').innerHTML =
+          '<img src="' + e.target.result + '">';
       };
       reader.readAsDataURL(input.files[0]);
     }
   }
-
-  // ── Indicateur force mot de passe ─────────────────────────────────────
-  function checkPasswordStrength(pwd) {
-    var fill  = document.getElementById('pwdFill');
-    var label = document.getElementById('pwdLabel');
-    var score = 0;
-    if (pwd.length >= 6)                    score++;
-    if (pwd.length >= 10)                   score++;
-    if (/[A-Z]/.test(pwd))                 score++;
-    if (/[0-9]/.test(pwd))                 score++;
-    if (/[^A-Za-z0-9]/.test(pwd))          score++;
-
-    var levels = [
-      { pct: '0%',   color: 'var(--bdr)', label: 'Saisissez un mot de passe' },
-      { pct: '25%',  color: 'var(--red)', label: 'Trop faible' },
-      { pct: '50%',  color: 'var(--orange)', label: 'Faible' },
-      { pct: '75%',  color: '#eab308', label: 'Moyen' },
-      { pct: '90%',  color: 'var(--teal)',   label: 'Fort' },
-      { pct: '100%', color: 'var(--green)',  label: '💪 Très fort' },
-    ];
-    fill.style.width      = levels[score].pct;
-    fill.style.background = levels[score].color;
-    label.textContent     = levels[score].label;
-    label.style.color     = levels[score].color;
-  }
-
-  // ── Vérification correspondance MDP ───────────────────────────────────
-  function checkPasswordMatch() {
-    var pwd  = document.getElementById('password').value;
-    var pwd2 = document.getElementById('password_confirm').value;
-    var err  = document.getElementById('matchError');
-    if (pwd2 && pwd !== pwd2) {
-      err.style.display = 'flex';
-      document.getElementById('password_confirm').style.borderColor = 'var(--red)';
-    } else {
-      err.style.display = 'none';
-      document.getElementById('password_confirm').style.borderColor = '';
-    }
-  }
-
-  // ── Toggle mot de passe ────────────────────────────────────────────────
-  function togglePwd(inputId, iconId) {
-    var input = document.getElementById(inputId);
-    var icon  = document.getElementById(iconId);
-    if (input.type === 'password') {
-      input.type   = 'text';
-      icon.className = 'ti ti-eye-off';
-    } else {
-      input.type   = 'password';
-      icon.className = 'ti ti-eye';
-    }
-  }
-
-  // ── Format IBAN ────────────────────────────────────────────────────────
-  function formatIBAN(input) {
-    var val = input.value.replace(/\s/g, '').toUpperCase();
-    var formatted = val.match(/.{1,4}/g);
-    input.value = formatted ? formatted.join(' ') : val;
-  }
-
-  // ── Format SIRET (14 chiffres) ─────────────────────────────────────────
-  function formatSIRET(input) {
-    var val = input.value.replace(/\D/g, '').substring(0, 14);
-    var parts = [];
-    if (val.length > 0)  parts.push(val.substring(0, 3));
-    if (val.length > 3)  parts.push(val.substring(3, 6));
-    if (val.length > 6)  parts.push(val.substring(6, 9));
-    if (val.length > 9)  parts.push(val.substring(9, 14));
-    input.value = parts.join(' ');
-    if (val.length > 0 && val.length < 14) {
-      input.style.borderColor = 'var(--orange)';
-    } else if (val.length === 14) {
-      input.style.borderColor = 'var(--green)';
-      var sirenInput = document.querySelector('[name="siren"]');
-      if (sirenInput) {
-        var s = val.substring(0, 9);
-        sirenInput.value = s.substring(0,3)+' '+s.substring(3,6)+' '+s.substring(6,9);
-      }
-    } else {
-      input.style.borderColor = '';
-    }
-  }
-
-  // ── Format SIREN (9 chiffres) ──────────────────────────────────────────
-  function formatSIREN(input) {
-    var val = input.value.replace(/\D/g, '').substring(0, 9);
-    var parts = [];
-    if (val.length > 0) parts.push(val.substring(0, 3));
-    if (val.length > 3) parts.push(val.substring(3, 6));
-    if (val.length > 6) parts.push(val.substring(6, 9));
-    input.value = parts.join(' ');
-    if (val.length > 0 && val.length < 9) {
-      input.style.borderColor = 'var(--orange)';
-    } else if (val.length === 9) {
-      input.style.borderColor = 'var(--green)';
-    } else {
-      input.style.borderColor = '';
-    }
-  }
-
-  // ── Autocomplétion code postal (API gouvernement) ──────────────────────
-  var cpTimeout = null;
-
-  function searchCodePostal(val) {
-    var box = document.getElementById('cpSuggestions');
-    if (!val || val.length < 2) {
-      box.style.display = 'none';
-      return;
-    }
-    clearTimeout(cpTimeout);
-    cpTimeout = setTimeout(function() {
-      fetch('https://geo.api.gouv.fr/communes?codePostal=' + val + '&fields=nom,codesPostaux&limit=15')
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          box.innerHTML = '';
-          if (!data || !data.length) {
-            box.style.display = 'none';
-            return;
-          }
-          data.forEach(function(commune) {
-            commune.codesPostaux.forEach(function(cp) {
-              var item = document.createElement('div');
-              item.innerHTML = '<strong>' + cp + '</strong> — ' + commune.nom;
-              item.style.cssText = 'padding:10px 14px;cursor:pointer;font-size:12px;color:var(--dark);border-bottom:1px solid #f1f5f9;';
-              item.onmouseover = function() { this.style.background = '#eef2ff'; };
-              item.onmouseout  = function() { this.style.background = ''; };
-              item.onclick = function() {
-                // Remplir le code postal
-                document.getElementById('codePostalInput').value = cp;
-                box.style.display = 'none';
-                // Auto-sélectionner le département
-                var dep = cp.substring(0, 2);
-                var select = document.querySelector('[name="ville"]');
-                if (select) {
-                  for (var i = 0; i < select.options.length; i++) {
-                    if (select.options[i].value.startsWith(dep + ' -')) {
-                      select.selectedIndex = i;
-                      break;
-                    }
-                  }
-                }
-              };
-              box.appendChild(item);
-            });
-          });
-          box.style.display = box.children.length ? 'block' : 'none';
-        })
-        .catch(function() {
-          box.style.display = 'none';
-        });
-    }, 350);
-  }
-
-  // Fermer suggestions si on clique ailleurs
-  document.addEventListener('click', function(e) {
-    var input = document.getElementById('codePostalInput');
-    var box   = document.getElementById('cpSuggestions');
-    if (box && input && !input.contains(e.target) && !box.contains(e.target)) {
-      box.style.display = 'none';
-    }
-  });
-
 </script>
-
 </body>
 </html>
