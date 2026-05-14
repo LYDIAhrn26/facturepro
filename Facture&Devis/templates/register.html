@@ -586,7 +586,7 @@
         Suivant <i class="ti ti-arrow-right"></i>
       </button>
       <button type="button" class="btn btn-primary" id="btnSubmit" style="display:none;"
-              onclick="document.getElementById('registerForm').submit();">
+              onclick="submitForm();">
         <i class="ti ti-building-store"></i> Créer mon compte entreprise
       </button>
     </div>
@@ -733,6 +733,18 @@
         (f.val && f.val.trim() ? f.val.trim() : 'Non renseigné') + '</div>' +
         '</div>';
     }).join('');
+  }
+
+  // ── Soumission forcée ─────────────────────────────────────────────────
+  function submitForm() {
+    try {
+      var form = document.getElementById('registerForm');
+      console.log('Soumission du formulaire...');
+      form.submit();
+    } catch(e) {
+      console.error('Erreur soumission:', e);
+      alert('Erreur: ' + e.message);
+    }
   }
 
   // ── Preview logo ───────────────────────────────────────────────────────
