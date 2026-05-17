@@ -434,7 +434,7 @@
         <div class="grid-2">
           <div class="field col-2">
             <label>Mot de passe <span class="req">*</span></label>
-            <input type="password" name="password" id="password"
+            <input type="password" name="password" id="password" autocomplete="new-password"
                    placeholder="Min. 6 caractères"
                    oninput="checkPwd(this.value)"
                    class="{{ 'error' if errors.password else '' }}">
@@ -444,7 +444,7 @@
           </div>
           <div class="field col-2">
             <label>Confirmer le mot de passe <span class="req">*</span></label>
-            <input type="password" name="password_confirm" id="password_confirm"
+            <input type="password" name="password_confirm" id="password_confirm" autocomplete="new-password"
                    placeholder="Répétez votre mot de passe"
                    class="{{ 'error' if errors.password_confirm else '' }}">
             {% if errors.password_confirm %}<span class="err-msg">{{ errors.password_confirm }}</span>{% endif %}
@@ -622,3 +622,4 @@
 </script>
 </body>
 </html>
+
