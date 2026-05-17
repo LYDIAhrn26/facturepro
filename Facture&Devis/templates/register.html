@@ -5,14 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Créer mon compte — FacturePro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
   <style>
     :root {
-      --indigo: #4f46e5; --indigo-d: #3730a3;
-      --dark: #0f0e1a; --gray: #64748b;
+      --indigo: #4f46e5; --indigo-d: #3730a3; --indigo-l: #eef2ff;
+      --dark: #0f0e1a; --gray: #64748b; --gray2: #94a3b8;
       --light: #f8fafc; --bdr: #e2e8f0;
-      --red: #ef4444;
+      --red: #ef4444; --green: #10b981;
+      --shadow: 0 25px 60px rgba(0,0,0,.35);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -20,254 +21,469 @@
       background: linear-gradient(135deg, #0f0e1a 0%, #1e1b4b 50%, #312e81 100%);
       min-height: 100vh;
       display: flex; align-items: flex-start; justify-content: center;
-      padding: 40px 16px;
+      padding: 32px 16px;
     }
-    .container { width: 100%; max-width: 700px; }
-    .header { text-align: center; margin-bottom: 28px; }
+    .container { width: 100%; max-width: 620px; }
+
+    /* ── Header ── */
+    .header { text-align: center; margin-bottom: 24px; }
     .logo {
       display: inline-flex; align-items: center; gap: 10px;
-      margin-bottom: 20px; text-decoration: none;
+      margin-bottom: 16px; text-decoration: none;
     }
     .logo-icon {
-      width: 44px; height: 44px; background: var(--indigo);
-      border-radius: 12px; display: flex; align-items: center;
+      width: 42px; height: 42px; background: var(--indigo);
+      border-radius: 11px; display: flex; align-items: center;
       justify-content: center; font-size: 20px; color: #fff;
     }
-    .logo-text { font-size: 22px; font-weight: 700; color: #fff; }
-    .header h1 { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-    .header p  { font-size: 14px; color: rgba(255,255,255,.6); }
+    .logo-text { font-size: 20px; font-weight: 700; color: #fff; }
+    .header h1 { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .header p  { font-size: 13px; color: rgba(255,255,255,.55); }
+
+    /* ── Stepper ── */
+    .stepper {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0; margin-bottom: 24px;
+    }
+    .step {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      position: relative; flex: 1;
+    }
+    .step-circle {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: rgba(255,255,255,.5);
+      transition: all .3s; position: relative; z-index: 2;
+    }
+    .step.active .step-circle {
+      background: var(--indigo); border-color: var(--indigo);
+      color: #fff; box-shadow: 0 0 0 4px rgba(79,70,229,.3);
+    }
+    .step.done .step-circle {
+      background: var(--green); border-color: var(--green); color: #fff;
+    }
+    .step-label { font-size: 10px; color: rgba(255,255,255,.4); font-weight: 500; white-space: nowrap; }
+    .step.active .step-label { color: rgba(255,255,255,.9); }
+    .step.done .step-label   { color: rgba(255,255,255,.6); }
+    .step-line {
+      flex: 1; height: 2px; background: rgba(255,255,255,.12);
+      margin: 0 -2px; margin-bottom: 22px; position: relative; z-index: 1;
+      transition: background .3s;
+    }
+    .step-line.done { background: var(--green); }
+
+    /* ── Card ── */
     .card {
       background: #fff; border-radius: 20px;
-      padding: 36px; box-shadow: 0 25px 60px rgba(0,0,0,.3);
+      padding: 36px; box-shadow: var(--shadow);
     }
-    .section-title {
-      font-size: 12px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .08em;
-      color: var(--indigo); margin-bottom: 14px; margin-top: 24px;
-      padding-bottom: 8px; border-bottom: 2px solid #eef2ff;
-      display: flex; align-items: center; gap: 8px;
+    .card-title {
+      font-size: 18px; font-weight: 700; color: var(--dark);
+      margin-bottom: 4px; display: flex; align-items: center; gap: 10px;
     }
-    .section-title:first-child { margin-top: 0; }
+    .card-title i { font-size: 22px; color: var(--indigo); }
+    .card-sub { font-size: 13px; color: var(--gray); margin-bottom: 24px; }
+
+    /* ── Section ── */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── Grid ── */
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .col-2  { grid-column: span 2; }
-    .field  { display: flex; flex-direction: column; gap: 5px; }
-    .field label { font-size: 12px; font-weight: 600; color: #374151; }
-    .field label .req { color: var(--red); }
-    .field input, .field select {
+
+    /* ── Field ── */
+    .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 2px; }
+    .field label {
+      font-size: 12px; font-weight: 600; color: #374151;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .req { color: var(--red); }
+    .field input, .field select, .field textarea {
       height: 44px; border: 1.5px solid var(--bdr);
       border-radius: 10px; padding: 0 14px;
       font-size: 14px; font-family: 'DM Sans', sans-serif;
       color: var(--dark); background: var(--light);
-      transition: border-color .2s, box-shadow .2s; outline: none; width: 100%;
+      transition: border-color .2s, box-shadow .2s;
+      outline: none; width: 100%;
     }
+    .field textarea { height: 80px; padding: 10px 14px; resize: none; }
     .field input:focus, .field select:focus {
       border-color: var(--indigo);
-      box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+      box-shadow: 0 0 0 3px rgba(79,70,229,.1);
       background: #fff;
     }
-    .field input.error { border-color: var(--red); }
-    .err-msg { font-size: 11px; color: var(--red); }
+    .field input.error { border-color: var(--red) !important; }
+    .err-msg { font-size: 11px; color: var(--red); margin-top: 2px; }
+    .hint { font-size: 11px; color: var(--gray2); margin-top: 2px; }
+
+    /* ── Flash ── */
     .flash {
-      padding: 12px 16px; border-radius: 10px;
+      padding: 11px 14px; border-radius: 9px;
       font-size: 13px; font-weight: 500; margin-bottom: 16px;
       display: flex; align-items: center; gap: 8px;
     }
     .flash.error   { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+    .flash.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
     .flash.warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
     .flash.info    { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
-    .flash.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+
+    /* ── Logo upload ── */
     .logo-upload {
       border: 2px dashed var(--bdr); border-radius: 10px;
-      padding: 18px; text-align: center; cursor: pointer;
+      padding: 16px; text-align: center; cursor: pointer;
       background: var(--light); transition: border-color .2s;
     }
     .logo-upload:hover { border-color: var(--indigo); }
     .logo-upload input { display: none; }
-    .logo-upload i { font-size: 28px; color: #cbd5e1; }
+    .logo-upload i { font-size: 26px; color: #cbd5e1; }
     .logo-upload-text { font-size: 12px; color: var(--gray); margin-top: 6px; }
-    #logoPreview img { max-height: 70px; object-fit: contain; border-radius: 8px; }
-    .btn-submit {
-      width: 100%; height: 52px; background: var(--indigo);
-      color: #fff; border: none; border-radius: 12px;
-      font-size: 16px; font-weight: 700;
+    #logoPreview img { max-height: 60px; object-fit: contain; border-radius: 6px; }
+
+    /* ── Résumé ── */
+    .summary { background: var(--light); border-radius: 12px; padding: 18px; margin-bottom: 20px; }
+    .summary-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--indigo); margin-bottom: 10px; }
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .summary-item { font-size: 12px; }
+    .summary-item .s-label { color: var(--gray2); margin-bottom: 1px; }
+    .summary-item .s-val   { color: var(--dark); font-weight: 600; }
+
+    /* ── Boutons ── */
+    .btn-row { display: flex; gap: 10px; margin-top: 24px; }
+    .btn-prev {
+      flex: 1; height: 48px; background: var(--light);
+      border: 1.5px solid var(--bdr); border-radius: 12px;
+      font-size: 14px; font-weight: 600; color: var(--gray);
       font-family: 'DM Sans', sans-serif; cursor: pointer;
-      margin-top: 24px;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background .2s;
+    }
+    .btn-prev:hover { background: #f1f5f9; }
+    .btn-next, .btn-submit {
+      flex: 2; height: 48px; background: var(--indigo);
+      border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 700; color: #fff;
+      font-family: 'DM Sans', sans-serif; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
       transition: background .2s, transform .15s;
     }
-    .btn-submit:hover { background: var(--indigo-d); transform: translateY(-1px); }
+    .btn-next:hover, .btn-submit:hover { background: var(--indigo-d); transform: translateY(-1px); }
+    .btn-next:only-child, .btn-submit:only-child { flex: 1; }
+
     .login-link {
       text-align: center; margin-top: 18px;
       font-size: 13px; color: var(--gray);
     }
     .login-link a { color: var(--indigo); font-weight: 600; text-decoration: none; }
-    @media (max-width: 600px) {
+
+    /* ── Password strength ── */
+    .pwd-strength { height: 4px; border-radius: 2px; margin-top: 6px; transition: all .3s; }
+    .pwd-weak   { background: #ef4444; width: 33%; }
+    .pwd-medium { background: #f59e0b; width: 66%; }
+    .pwd-strong { background: #10b981; width: 100%; }
+
+    @media (max-width: 580px) {
       .grid-2 { grid-template-columns: 1fr; }
       .col-2  { grid-column: span 1; }
       .card   { padding: 24px; }
+      .summary-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 <div class="container">
+
+  <!-- Header -->
   <div class="header">
     <a href="{{ url_for('home') }}" class="logo">
       <div class="logo-icon"><i class="ti ti-building-store"></i></div>
       <div class="logo-text">FacturePro</div>
     </a>
     <h1>Créer mon compte entreprise</h1>
-    <p>Remplissez le formulaire pour commencer gratuitement</p>
+    <p>Rejoignez des milliers de professionnels qui gèrent leur facturation en ligne</p>
   </div>
 
+  <!-- Stepper -->
+  <div class="stepper" id="stepper">
+    <div class="step active" id="dot-1">
+      <div class="step-circle"><i class="ti ti-building-store" style="font-size:14px;"></i></div>
+      <div class="step-label">Entreprise</div>
+    </div>
+    <div class="step-line" id="line-1"></div>
+    <div class="step" id="dot-2">
+      <div class="step-circle"><i class="ti ti-user" style="font-size:14px;"></i></div>
+      <div class="step-label">Gérant</div>
+    </div>
+    <div class="step-line" id="line-2"></div>
+    <div class="step" id="dot-3">
+      <div class="step-circle"><i class="ti ti-credit-card" style="font-size:14px;"></i></div>
+      <div class="step-label">Bancaire</div>
+    </div>
+    <div class="step-line" id="line-3"></div>
+    <div class="step" id="dot-4">
+      <div class="step-circle"><i class="ti ti-lock" style="font-size:14px;"></i></div>
+      <div class="step-label">Identifiants</div>
+    </div>
+    <div class="step-line" id="line-4"></div>
+    <div class="step" id="dot-5">
+      <div class="step-circle"><i class="ti ti-check" style="font-size:14px;"></i></div>
+      <div class="step-label">Confirmation</div>
+    </div>
+  </div>
+
+  <!-- Card -->
   <div class="card">
 
+    <!-- Flash messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-        <div class="flash {{ category }}">
-          <i class="ti ti-{% if category == 'error' %}alert-circle{% elif category == 'warning' %}alert-triangle{% elif category == 'success' %}circle-check{% else %}info-circle{% endif %}"></i>
-          {{ message }}
-        </div>
-        {% endfor %}
-      {% endif %}
+      {% if messages %}{% for cat, msg in messages %}
+      <div class="flash {{ cat }}">
+        <i class="ti ti-{% if cat=='error' %}alert-circle{% elif cat=='success' %}circle-check{% else %}info-circle{% endif %}"></i>
+        {{ msg }}
+      </div>
+      {% endfor %}{% endif %}
     {% endwith %}
 
     {% if errors.general %}
-    <div class="flash error">
-      <i class="ti ti-alert-circle"></i>{{ errors.general }}
-    </div>
+    <div class="flash error"><i class="ti ti-alert-circle"></i>{{ errors.general }}</div>
     {% endif %}
 
-    <form method="POST" action="{{ url_for('register') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ url_for('register') }}" enctype="multipart/form-data" id="regForm">
 
-      <!-- ENTREPRISE -->
-      <div class="section-title"><i class="ti ti-building-store"></i> Informations entreprise</div>
-      <div class="grid-2">
-        <div class="field col-2">
-          <label>Nom de l'entreprise <span class="req">*</span></label>
-          <input type="text" name="nom_entreprise" value="{{ form.get('nom_entreprise','') if form else '' }}"
-                 placeholder="Ex : Bâti Pro SARL" class="{{ 'error' if errors.nom_entreprise else '' }}" required>
-          {% if errors.nom_entreprise %}<span class="err-msg">{{ errors.nom_entreprise }}</span>{% endif %}
+      <!-- ══ ÉTAPE 1 : Entreprise ══ -->
+      <div class="section active" id="s1">
+        <div class="card-title"><i class="ti ti-building-store"></i> Votre entreprise</div>
+        <div class="card-sub">Ces informations apparaîtront sur tous vos devis et factures.</div>
+        <div class="grid-2">
+          <div class="field col-2">
+            <label>Nom de l'entreprise <span class="req">*</span></label>
+            <input type="text" name="nom_entreprise" id="nom_entreprise"
+                   value="{{ form.get('nom_entreprise','') if form else '' }}"
+                   placeholder="Ex : Bâti Pro SARL" class="{{ 'error' if errors.nom_entreprise else '' }}">
+            {% if errors.nom_entreprise %}<span class="err-msg">{{ errors.nom_entreprise }}</span>{% endif %}
+          </div>
+          <div class="field">
+            <label>Forme juridique</label>
+            <select name="forme_juridique" id="forme_juridique">
+              <option value="">-- Choisir --</option>
+              {% for f in ['Auto-entrepreneur','EI','SARL','SAS','SASU','EURL','SNC','SA','Artisan','Association','Autre'] %}
+              <option value="{{ f }}" {{ 'selected' if form and form.get('forme_juridique')==f else '' }}>{{ f }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label>Secteur d'activité</label>
+            <input type="text" name="activite" id="activite"
+                   value="{{ form.get('activite','') if form else '' }}"
+                   placeholder="Ex : BTP, Transport, Conseil...">
+          </div>
+          <div class="field">
+            <label>SIRET <span class="req">*</span></label>
+            <input type="text" name="siret" id="siret"
+                   value="{{ form.get('siret','') if form else '' }}"
+                   placeholder="14 chiffres" maxlength="17"
+                   class="{{ 'error' if errors.siret else '' }}">
+            {% if errors.siret %}<span class="err-msg">{{ errors.siret }}</span>{% endif %}
+          </div>
+          <div class="field">
+            <label>SIREN</label>
+            <input type="text" name="siren" id="siren"
+                   value="{{ form.get('siren','') if form else '' }}"
+                   placeholder="9 chiffres" maxlength="11">
+          </div>
+          <div class="field">
+            <label>Capital social</label>
+            <input type="text" name="capital" id="capital"
+                   value="{{ form.get('capital','') if form else '' }}"
+                   placeholder="Ex : 10 000 €">
+          </div>
+          <div class="field col-2">
+            <label>Adresse du siège</label>
+            <input type="text" name="adresse" id="adresse"
+                   value="{{ form.get('adresse','') if form else '' }}"
+                   placeholder="Ex : 12 rue de la Paix">
+          </div>
+          <div class="field">
+            <label>Code postal</label>
+            <input type="text" name="code_postal" id="code_postal"
+                   value="{{ form.get('code_postal','') if form else '' }}"
+                   placeholder="Ex : 75001" maxlength="5">
+          </div>
+          <div class="field">
+            <label>Ville</label>
+            <input type="text" name="ville" id="ville"
+                   value="{{ form.get('ville','') if form else '' }}"
+                   placeholder="Ex : Paris">
+          </div>
+          <div class="field">
+            <label>Email professionnel <span class="req">*</span></label>
+            <input type="email" name="email" id="email"
+                   value="{{ form.get('email','') if form else '' }}"
+                   placeholder="contact@entreprise.fr"
+                   class="{{ 'error' if errors.email else '' }}">
+            {% if errors.email %}<span class="err-msg">{{ errors.email }}</span>{% endif %}
+          </div>
+          <div class="field">
+            <label>Téléphone</label>
+            <input type="tel" name="telephone" id="telephone"
+                   value="{{ form.get('telephone','') if form else '' }}"
+                   placeholder="06 00 00 00 00">
+          </div>
+          <div class="field col-2">
+            <label>Logo <span style="color:var(--gray2);font-weight:400;">(optionnel — PNG, JPG, max 2Mo)</span></label>
+            <label class="logo-upload" for="logoInput">
+              <div id="logoPreview"><i class="ti ti-photo"></i></div>
+              <div class="logo-upload-text">Cliquez pour uploader votre logo</div>
+              <input type="file" id="logoInput" name="logo" accept=".png,.jpg,.jpeg,.svg"
+                     onchange="previewLogo(this)">
+            </label>
+          </div>
         </div>
-        <div class="field">
-          <label>Forme juridique</label>
-          <select name="forme_juridique">
-            <option value="">-- Choisir --</option>
-            {% for f in ['Auto-entrepreneur','SARL','SAS','SASU','EURL','SNC','SA','Artisan','Association','Autre'] %}
-            <option value="{{ f }}" {{ 'selected' if form and form.get('forme_juridique') == f else '' }}>{{ f }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="field">
-          <label>Secteur d'activité</label>
-          <input type="text" name="activite" value="{{ form.get('activite','') if form else '' }}"
-                 placeholder="Ex : BTP, Transport, Conseil...">
-        </div>
-        <div class="field">
-          <label>SIRET <span class="req">*</span></label>
-          <input type="text" name="siret" value="{{ form.get('siret','') if form else '' }}"
-                 placeholder="14 chiffres" maxlength="17" class="{{ 'error' if errors.siret else '' }}">
-          {% if errors.siret %}<span class="err-msg">{{ errors.siret }}</span>{% endif %}
-        </div>
-        <div class="field">
-          <label>SIREN</label>
-          <input type="text" name="siren" value="{{ form.get('siren','') if form else '' }}"
-                 placeholder="9 chiffres" maxlength="11">
-        </div>
-        <div class="field">
-          <label>Capital social</label>
-          <input type="text" name="capital" value="{{ form.get('capital','') if form else '' }}"
-                 placeholder="Ex : 10 000">
-        </div>
-        <div class="field col-2">
-          <label>Adresse</label>
-          <input type="text" name="adresse" value="{{ form.get('adresse','') if form else '' }}"
-                 placeholder="Ex : 12 rue de la Paix">
-        </div>
-        <div class="field">
-          <label>Code postal</label>
-          <input type="text" name="code_postal" value="{{ form.get('code_postal','') if form else '' }}"
-                 placeholder="Ex : 75001" maxlength="5">
-        </div>
-        <div class="field">
-          <label>Ville</label>
-          <input type="text" name="ville" value="{{ form.get('ville','') if form else '' }}"
-                 placeholder="Ex : Paris">
-        </div>
-        <div class="field">
-          <label>Email professionnel <span class="req">*</span></label>
-          <input type="email" name="email" value="{{ form.get('email','') if form else '' }}"
-                 placeholder="contact@entreprise.fr" class="{{ 'error' if errors.email else '' }}">
-          {% if errors.email %}<span class="err-msg">{{ errors.email }}</span>{% endif %}
-        </div>
-        <div class="field">
-          <label>Téléphone</label>
-          <input type="tel" name="telephone" value="{{ form.get('telephone','') if form else '' }}"
-                 placeholder="06 00 00 00 00">
-        </div>
-        <div class="field col-2">
-          <label>Logo <span style="color:var(--gray);font-weight:400;">(optionnel)</span></label>
-          <label class="logo-upload" for="logoInput">
-            <div id="logoPreview"><i class="ti ti-photo"></i></div>
-            <div class="logo-upload-text">Cliquez pour uploader votre logo (PNG, JPG — max 2Mo)</div>
-            <input type="file" id="logoInput" name="logo" accept=".png,.jpg,.jpeg,.svg"
-                   onchange="previewLogo(this)">
-          </label>
+        <div class="btn-row">
+          <button type="button" class="btn-next" onclick="goTo(2)">
+            Suivant <i class="ti ti-arrow-right"></i>
+          </button>
         </div>
       </div>
 
-      <!-- GÉRANT -->
-      <div class="section-title"><i class="ti ti-user"></i> Informations du gérant</div>
-      <div class="grid-2">
-        <div class="field">
-          <label>Prénom <span class="req">*</span></label>
-          <input type="text" name="prenom_gerant" value="{{ form.get('prenom_gerant','') if form else '' }}"
-                 placeholder="Votre prénom" required>
+      <!-- ══ ÉTAPE 2 : Gérant ══ -->
+      <div class="section" id="s2">
+        <div class="card-title"><i class="ti ti-user"></i> Informations du gérant</div>
+        <div class="card-sub">Le nom du gérant apparaîtra sur vos documents et dans l'application.</div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Prénom <span class="req">*</span></label>
+            <input type="text" name="prenom_gerant" id="prenom_gerant"
+                   value="{{ form.get('prenom_gerant','') if form else '' }}"
+                   placeholder="Votre prénom">
+          </div>
+          <div class="field">
+            <label>Nom <span class="req">*</span></label>
+            <input type="text" name="nom_gerant" id="nom_gerant"
+                   value="{{ form.get('nom_gerant','') if form else '' }}"
+                   placeholder="Votre nom"
+                   class="{{ 'error' if errors.nom_gerant else '' }}">
+            {% if errors.nom_gerant %}<span class="err-msg">{{ errors.nom_gerant }}</span>{% endif %}
+          </div>
+          <div class="field">
+            <label>Fonction</label>
+            <select name="fonction_gerant" id="fonction_gerant">
+              <option value="">-- Choisir --</option>
+              {% for f in ['Gérant','Directeur général','Président','Auto-entrepreneur','Artisan','Autre'] %}
+              <option value="{{ f }}" {{ 'selected' if form and form.get('fonction_gerant')==f else '' }}>{{ f }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label>Téléphone mobile</label>
+            <input type="tel" name="tel_gerant" id="tel_gerant"
+                   value="{{ form.get('tel_gerant','') if form else '' }}"
+                   placeholder="06 00 00 00 00">
+          </div>
         </div>
-        <div class="field">
-          <label>Nom <span class="req">*</span></label>
-          <input type="text" name="nom_gerant" value="{{ form.get('nom_gerant','') if form else '' }}"
-                 placeholder="Votre nom" class="{{ 'error' if errors.nom_gerant else '' }}" required>
-          {% if errors.nom_gerant %}<span class="err-msg">{{ errors.nom_gerant }}</span>{% endif %}
-        </div>
-      </div>
-
-      <!-- BANCAIRE -->
-      <div class="section-title"><i class="ti ti-credit-card"></i> Informations bancaires <span style="font-size:11px;font-weight:400;color:var(--gray);">(optionnel)</span></div>
-      <div class="grid-2">
-        <div class="field col-2">
-          <label>IBAN</label>
-          <input type="text" name="iban" value="{{ form.get('iban','') if form else '' }}"
-                 placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX">
-        </div>
-        <div class="field">
-          <label>BIC</label>
-          <input type="text" name="bic" value="{{ form.get('bic','') if form else '' }}"
-                 placeholder="Ex : BNPAFRPP">
-        </div>
-      </div>
-
-      <!-- MOT DE PASSE -->
-      <div class="section-title"><i class="ti ti-lock"></i> Identifiants de connexion</div>
-      <div class="grid-2">
-        <div class="field">
-          <label>Mot de passe <span class="req">*</span></label>
-          <input type="password" name="password" placeholder="Min. 6 caractères"
-                 class="{{ 'error' if errors.password else '' }}" required>
-          {% if errors.password %}<span class="err-msg">{{ errors.password }}</span>{% endif %}
-        </div>
-        <div class="field">
-          <label>Confirmer <span class="req">*</span></label>
-          <input type="password" name="password_confirm" placeholder="Répétez le mot de passe"
-                 class="{{ 'error' if errors.password_confirm else '' }}" required>
-          {% if errors.password_confirm %}<span class="err-msg">{{ errors.password_confirm }}</span>{% endif %}
+        <div class="btn-row">
+          <button type="button" class="btn-prev" onclick="goTo(1)">
+            <i class="ti ti-arrow-left"></i> Précédent
+          </button>
+          <button type="button" class="btn-next" onclick="goTo(3)">
+            Suivant <i class="ti ti-arrow-right"></i>
+          </button>
         </div>
       </div>
 
-      <button type="submit" class="btn-submit">
-        <i class="ti ti-building-store"></i>
-        Créer mon compte entreprise
-      </button>
+      <!-- ══ ÉTAPE 3 : Bancaire ══ -->
+      <div class="section" id="s3">
+        <div class="card-title"><i class="ti ti-credit-card"></i> Informations bancaires</div>
+        <div class="card-sub">Ces informations apparaîtront sur vos factures pour le règlement client.</div>
+        <div class="grid-2">
+          <div class="field col-2">
+            <label>IBAN</label>
+            <input type="text" name="iban" id="iban"
+                   value="{{ form.get('iban','') if form else '' }}"
+                   placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX">
+            <span class="hint">Laissez vide si vous ne souhaitez pas l'afficher sur vos factures</span>
+          </div>
+          <div class="field">
+            <label>BIC / SWIFT</label>
+            <input type="text" name="bic" id="bic"
+                   value="{{ form.get('bic','') if form else '' }}"
+                   placeholder="Ex : BNPAFRPP">
+          </div>
+          <div class="field">
+            <label>Banque</label>
+            <input type="text" name="banque" id="banque"
+                   value="{{ form.get('banque','') if form else '' }}"
+                   placeholder="Ex : BNP Paribas">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn-prev" onclick="goTo(2)">
+            <i class="ti ti-arrow-left"></i> Précédent
+          </button>
+          <button type="button" class="btn-next" onclick="goTo(4)">
+            Suivant <i class="ti ti-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ══ ÉTAPE 4 : Identifiants ══ -->
+      <div class="section" id="s4">
+        <div class="card-title"><i class="ti ti-lock"></i> Identifiants de connexion</div>
+        <div class="card-sub">Choisissez un mot de passe sécurisé pour accéder à votre compte.</div>
+        <div class="grid-2">
+          <div class="field col-2">
+            <label>Mot de passe <span class="req">*</span></label>
+            <input type="password" name="password" id="password"
+                   placeholder="Min. 6 caractères"
+                   oninput="checkPwd(this.value)"
+                   class="{{ 'error' if errors.password else '' }}">
+            <div class="pwd-strength" id="pwdBar" style="display:none;"></div>
+            <span class="hint" id="pwdHint"></span>
+            {% if errors.password %}<span class="err-msg">{{ errors.password }}</span>{% endif %}
+          </div>
+          <div class="field col-2">
+            <label>Confirmer le mot de passe <span class="req">*</span></label>
+            <input type="password" name="password_confirm" id="password_confirm"
+                   placeholder="Répétez votre mot de passe"
+                   class="{{ 'error' if errors.password_confirm else '' }}">
+            {% if errors.password_confirm %}<span class="err-msg">{{ errors.password_confirm }}</span>{% endif %}
+          </div>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn-prev" onclick="goTo(3)">
+            <i class="ti ti-arrow-left"></i> Précédent
+          </button>
+          <button type="button" class="btn-next" onclick="goTo(5)">
+            Vérifier <i class="ti ti-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ══ ÉTAPE 5 : Confirmation ══ -->
+      <div class="section" id="s5">
+        <div class="card-title"><i class="ti ti-circle-check"></i> Confirmation</div>
+        <div class="card-sub">Vérifiez vos informations avant de créer votre compte.</div>
+
+        <div class="summary" id="summaryEntreprise">
+          <div class="summary-title"><i class="ti ti-building-store"></i> Entreprise</div>
+          <div class="summary-grid" id="sumEnt"></div>
+        </div>
+
+        <div class="summary" id="summaryGerant">
+          <div class="summary-title"><i class="ti ti-user"></i> Gérant</div>
+          <div class="summary-grid" id="sumGer"></div>
+        </div>
+
+        <div class="btn-row">
+          <button type="button" class="btn-prev" onclick="goTo(4)">
+            <i class="ti ti-arrow-left"></i> Modifier
+          </button>
+          <button type="submit" class="btn-submit" id="btnSubmit">
+            <i class="ti ti-building-store"></i> Créer mon compte
+          </button>
+        </div>
+      </div>
 
     </form>
 
@@ -278,6 +494,110 @@
 </div>
 
 <script>
+  var currentStep = 1;
+
+  function goTo(step) {
+    // Validation basique
+    if (step > currentStep) {
+      if (currentStep === 1) {
+        var nom = document.getElementById('nom_entreprise').value.trim();
+        var email = document.getElementById('email').value.trim();
+        var siret = document.getElementById('siret').value.trim();
+        if (!nom) { alert('Le nom de l\'entreprise est obligatoire !'); return; }
+        if (!email) { alert('L\'email professionnel est obligatoire !'); return; }
+        if (!siret) { alert('Le SIRET est obligatoire !'); return; }
+      }
+      if (currentStep === 2) {
+        var prenom = document.getElementById('prenom_gerant').value.trim();
+        var nom_g  = document.getElementById('nom_gerant').value.trim();
+        if (!prenom || !nom_g) { alert('Le prénom et le nom du gérant sont obligatoires !'); return; }
+      }
+      if (currentStep === 4) {
+        var pwd  = document.getElementById('password').value;
+        var pwd2 = document.getElementById('password_confirm').value;
+        if (pwd.length < 6) { alert('Le mot de passe doit contenir au moins 6 caractères !'); return; }
+        if (pwd !== pwd2)   { alert('Les mots de passe ne correspondent pas !'); return; }
+      }
+    }
+
+    // Si on va à l'étape 5 → générer le résumé
+    if (step === 5) buildSummary();
+
+    // Masquer section actuelle
+    document.getElementById('s' + currentStep).classList.remove('active');
+
+    // Mettre à jour stepper
+    var dot = document.getElementById('dot-' + currentStep);
+    dot.classList.remove('active');
+    dot.classList.add('done');
+    if (currentStep < 5) {
+      var line = document.getElementById('line-' + currentStep);
+      if (line) line.classList.add('done');
+    }
+
+    if (step < currentStep) {
+      // Retour arrière
+      for (var i = step; i <= currentStep; i++) {
+        var d = document.getElementById('dot-' + i);
+        d.classList.remove('done', 'active');
+        var l = document.getElementById('line-' + i);
+        if (l) l.classList.remove('done');
+      }
+    }
+
+    currentStep = step;
+    document.getElementById('s' + currentStep).classList.add('active');
+    document.getElementById('dot-' + currentStep).classList.add('active');
+    document.getElementById('dot-' + currentStep).classList.remove('done');
+
+    window.scrollTo(0, 0);
+  }
+
+  function buildSummary() {
+    var sumEnt = document.getElementById('sumEnt');
+    var sumGer = document.getElementById('sumGer');
+
+    var nom    = document.getElementById('nom_entreprise').value || '—';
+    var forme  = document.getElementById('forme_juridique').value || '—';
+    var siret  = document.getElementById('siret').value || '—';
+    var email  = document.getElementById('email').value || '—';
+    var tel    = document.getElementById('telephone').value || '—';
+    var ville  = document.getElementById('ville').value || '—';
+
+    sumEnt.innerHTML =
+      item('Entreprise', nom) + item('Forme', forme) +
+      item('SIRET', siret)    + item('Email', email) +
+      item('Téléphone', tel)  + item('Ville', ville);
+
+    var prenom = document.getElementById('prenom_gerant').value || '—';
+    var nomG   = document.getElementById('nom_gerant').value    || '—';
+    var fonc   = document.getElementById('fonction_gerant').value || '—';
+
+    sumGer.innerHTML =
+      item('Prénom', prenom) + item('Nom', nomG) + item('Fonction', fonc);
+  }
+
+  function item(label, val) {
+    return '<div class="summary-item"><div class="s-label">' + label + '</div><div class="s-val">' + val + '</div></div>';
+  }
+
+  function checkPwd(val) {
+    var bar  = document.getElementById('pwdBar');
+    var hint = document.getElementById('pwdHint');
+    if (!val) { bar.style.display = 'none'; return; }
+    bar.style.display = 'block';
+    if (val.length < 6) {
+      bar.className = 'pwd-strength pwd-weak';
+      hint.textContent = 'Mot de passe trop court';
+    } else if (val.length < 10 || !/[0-9]/.test(val)) {
+      bar.className = 'pwd-strength pwd-medium';
+      hint.textContent = 'Mot de passe moyen — ajoutez des chiffres';
+    } else {
+      bar.className = 'pwd-strength pwd-strong';
+      hint.textContent = 'Mot de passe fort ✓';
+    }
+  }
+
   function previewLogo(input) {
     if (input.files && input.files[0]) {
       var reader = new FileReader();
@@ -288,6 +608,17 @@
       reader.readAsDataURL(input.files[0]);
     }
   }
+
+  // Si erreurs Flask → afficher l'étape concernée
+  {% if errors %}
+    {% if errors.nom_entreprise or errors.siret or errors.email %}
+      goTo(1);
+    {% elif errors.nom_gerant %}
+      goTo(2);
+    {% elif errors.password or errors.password_confirm %}
+      goTo(4);
+    {% endif %}
+  {% endif %}
 </script>
 </body>
 </html>
