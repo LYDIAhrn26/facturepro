@@ -283,7 +283,8 @@
             <input type="text" name="siret" id="siret"
                    value="{{ form.get('siret','') if form else '' }}"
                    placeholder="14 chiffres" maxlength="17"
-                   class="{{ 'error' if errors.siret else '' }}">
+                   class="{{ 'error' if errors.siret else '' }}"
+                   oninput="autoSiren(this.value)">
             {% if errors.siret %}<span class="err-msg">{{ errors.siret }}</span>{% endif %}
           </div>
           <div class="field">
@@ -308,7 +309,8 @@
             <label>Code postal</label>
             <input type="text" name="code_postal" id="code_postal"
                    value="{{ form.get('code_postal','') if form else '' }}"
-                   placeholder="Ex : 75001" maxlength="5">
+                   placeholder="Ex : 75001" maxlength="5"
+                   oninput="autoVille(this.value)">
           </div>
           <div class="field">
             <label>Ville</label>
@@ -609,6 +611,29 @@
     }
   }
 
+  // ── SIRET → SIREN automatique ────────────────────────────────────────
+  function autoSiren(val) {
+    var clean = val.replace(/[^0-9]/g, '');
+    if (clean.length >= 9) {
+      document.getElementById('siren').value = clean.substring(0, 9);
+    }
+  }
+
+  // ── Code postal → Ville automatique ──────────────────────────────────
+  function autoVille(val) {
+    var clean = val.replace(/[^0-9]/g, '');
+    if (clean.length === 5) {
+      fetch('https://geo.api.gouv.fr/communes?codePostal=' + clean + '&fields=nom&limit=1')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data && data.length > 0) {
+            document.getElementById('ville').value = data[0].nom;
+          }
+        })
+        .catch(function() {});
+    }
+  }
+
   // Si erreurs Flask → afficher l'étape concernée
   {% if errors %}
     {% if errors.nom_entreprise or errors.siret or errors.email %}
@@ -622,4 +647,3 @@
 </script>
 </body>
 </html>
-
